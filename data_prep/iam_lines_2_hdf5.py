@@ -55,7 +55,7 @@ def process_folder(input_path, output_fname):
 
 def main():
     if len(sys.argv) != 2:
-        print "Usage: python iam_2_hdf5.py /path/to/line_pngs/ /path/to/output_fname.hdf5"
+        print "Usage: python iam_lines_2_hdf5.py /path/to/line_pngs/ /path/to/output_fname.hdf5"
         sys.exit(1)
 
     input_directory = sys.argv[1]
