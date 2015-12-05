@@ -30,7 +30,13 @@ class IAM_MiniBatcher:
         max_y = max(height - shingle_dim[0], 0)
         x_start = random.randint(0, max_x)
         y_start = random.randint(0, max_y)
-        return original_line[y_start:y_start+ shingle_dim[0], x_start:x_start+shingle_dim[1]]
+        if width < shingle_dim[1] or height < shingle_dim[0]: # The line is too small in at least one access
+            output_arr = np.zeros(shingle_dim)
+            output_arr.fill(255)
+            output_arr[:height,:width] = original_line
+            return output_arr
+        else:
+            return original_line[y_start:y_start+ shingle_dim[0], x_start:x_start+shingle_dim[1]]
 
     def __init__(self, fname, num_authors, num_forms_per_author, use_form=False, default_mode=MiniBatcher.TRAIN, shingle_dim=(120,120), batch_size=32):
         self.hdf5_file = fname
@@ -40,7 +46,7 @@ class IAM_MiniBatcher:
 
         # Filter on number of forms per author
         for author in fIn.keys():
-            if len(fIn[author]) > num_forms_per_author:
+            if len(fIn[author]) >= num_forms_per_author:
                 authors.append(author)
 
         if len(authors) < num_authors:
