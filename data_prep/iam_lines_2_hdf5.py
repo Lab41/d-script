@@ -2,6 +2,7 @@ import glob
 import h5py
 import sys
 import os
+import gzip
 from collections import defaultdict, namedtuple
 import numpy as np
 import scipy.misc
@@ -11,8 +12,12 @@ from utils import *
 bbox = namedtuple('bbox', ['min_x', 'min_y', 'max_x', 'max_y'])
 
 def get_form_info(fname):
+    if fname.endswith('.gz'):
+        fIn = gzip.open(fname)
+    else:
+        fIn = open(fname)
     line_info = defaultdict(list)
-    for line in open(fname):
+    for line in fIn:
         if not line.startswith('#'):
             ls = line.strip().split()
             line_name = ls[0].split('-')
@@ -24,10 +29,6 @@ def get_form_info(fname):
     H = 7
     form_info = defaultdict(list)
     for form in line_info:
-        max_x = None
-        min_x = None
-        max_y = None
-        min_y = None
         for line in line_info[form]:
             x = int(line[X])
             y = int(line[Y])
