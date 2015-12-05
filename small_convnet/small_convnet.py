@@ -19,7 +19,7 @@ from data_iters.minibatcher import MiniBatcher
 from data_iters.iam_hdf5_iterator import IAM_MiniBatcher
 
 
-def create_model(num_authors, shingle_dim):
+def create_model(num_authors, shingle_dim, lr):
     model = Sequential()
     model.add(Convolution2D(48, 12, 12,
                         border_mode='full',
@@ -49,15 +49,16 @@ def create_model(num_authors, shingle_dim):
     model.add(Activation('softmax'))
 
     print "Compiling model"
-    sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+    sgd = SGD(lr=lr, decay=1e-6, momentum=0.9, nesterov=True)
     model.compile(loss='categorical_crossentropy', optimizer=sgd)
     print "Finished compilation"
 
     return model
 
-def run_model(hdf5_file, num_authors, num_forms_per_author, shingle_dim, num_iters=10, batch_size=32, use_form=False):
+def run_model(hdf5_file, num_authors, num_forms_per_author, shingle_dim, num_iters=10, batch_size=32,
+              use_form=False, lr=0.03):
     # Create Keras model
-    model = create_model(num_authors, shingle_dim)
+    model = create_model(num_authors, shingle_dim, lr)
 
     # Create a mini_batcher for
     iam_m = IAM_MiniBatcher(hdf5_file, num_authors, num_forms_per_author, shingle_dim=shingle_dim,
@@ -106,6 +107,7 @@ def main():
     parser.add_option("--shingle_dim", dest='shingle_dim', help="Shingle dimensions, comma separated i.e. 120,120")
     parser.add_option("--num_iters", dest="num_iters", type=int, help="Number of iterations to run model")
     parser.add_option("--batch_size", dest="batch_size", type=int, default=32, help="Iteration Batch Size")
+    parser.add_option("--lr", dest="lr", type=float, default=0.03, help="Learning rate (e.g. 0.03)")
     parser.add_option("--from_form", dest="use_form", action='store_true', default=False)
     (options, args) = parser.parse_args()
 
@@ -113,7 +115,7 @@ def main():
     shingle_dim = (int(shingle_str[0]), int(shingle_str[1]))
 
     run_model(options.filename, options.num_authors, options.num_forms_per_author,
-              shingle_dim, options.num_iters, options.batch_size, options.use_form)
+              shingle_dim, options.num_iters, options.batch_size, options.use_form, options.lr)
 
 if __name__ == "__main__":
     main()
