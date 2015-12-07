@@ -44,7 +44,7 @@ Writer identification using neural networks
 
 <td class="confluenceTd">Draft</td>
 
-<td class="confluenceTd">![](/rest/documentConversion/latest/conversion/thumbnail/21627582/3?attachmentId=21627582&version=3&mimeType=application%2Fvnd.openxmlformats-officedocument.presentationml.presentation&height=250&thumbnailStatus=200)</td>
+<td class="confluenceTd">![](https://github.com/Lab41/d-script/raw/master/readme_attachments/InitProposal_v.1.pptx)</td>
 
 </tr>
 
@@ -56,7 +56,7 @@ Writer identification using neural networks
 
 <td colspan="1" class="confluenceTd">Draft</td>
 
-<td colspan="1" class="confluenceTd">![](/rest/documentConversion/latest/conversion/thumbnail/21627581/7?attachmentId=21627581&version=7&mimeType=application%2Fvnd.openxmlformats-officedocument.presentationml.presentation&height=250&thumbnailStatus=200)</td>
+<td colspan="1" class="confluenceTd">![](https://github.com/Lab41/d-script/raw/master/readme_attachments/d-script%20kickoff%20slides_v1.pptx)</td>
 
 </tr>
 
