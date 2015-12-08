@@ -33,7 +33,7 @@ class IAM_MiniBatcher:
         if width < shingle_dim[1] or height < shingle_dim[0]: # The line is too small in at least one access
             output_arr = np.zeros(shingle_dim)
             output_arr.fill(255)
-            output_arr[:height,:width] = original_line
+            output_arr[:height,:width] = original_line[:min(height, shingle_dim[0]), :min(width, shingle_dim[1])]
             return output_arr
         else:
             return original_line[y_start:y_start+ shingle_dim[0], x_start:x_start+shingle_dim[1]]
@@ -107,15 +107,27 @@ class IAM_MiniBatcher:
 
 def main():
     import time
-    from scipy.sparse import csr_matrix
-    #hdf5_file = 'output_shingles_sparse.hdf5'
-    hdf5_file = 'raw_lines.hdf5'
-    num_authors=40
-    num_forms_per_author=15
+    import sys
+    from optparse import OptionParser
 
-    iam_m = IAM_MiniBatcher(hdf5_file, num_authors, num_forms_per_author, default_mode=MiniBatcher.TRAIN, batch_size=32)
+    parser = OptionParser()
+    parser.add_option("-f", "--file", dest="filename",
+                      help="Log file to read")
+    parser.add_option("--num_authors", dest='num_authors', type=int, help="Number of authors to include")
+    parser.add_option("--num_forms_per_author", dest='num_forms_per_author',
+                      type=int, help="Number of forms per author required")
+    parser.add_option("--shingle_dim", dest='shingle_dim', help="Shingle dimensions, comma separated i.e. 120,120")
+    parser.add_option("--batch_size", dest="batch_size", type=int, default=32, help="Iteration Batch Size")
+    parser.add_option("--from_form", dest="use_form", action='store_true', default=False)
+    (options, args) = parser.parse_args()
 
-    num_batches = 10#00
+    shingle_dim = map(int, options.shingle_dim.split(','))
+
+    iam_m = IAM_MiniBatcher(options.filename, options.num_authors, options.num_forms_per_author,
+                            shingle_dim=shingle_dim, use_form=options.use_form,
+                            default_mode=MiniBatcher.TRAIN, batch_size=options.batch_size)
+
+    num_batches = 10
     start_time = time.time()
     for i in range(num_batches):
         z = iam_m.get_train_batch()
