@@ -12,6 +12,7 @@ from utils import *
 bbox = namedtuple('bbox', ['min_x', 'min_y', 'max_x', 'max_y'])
 
 def get_form_info(fname):
+    form_to_author = {}
     if fname.endswith('.gz'):
         fIn = gzip.open(fname)
     else:
@@ -21,7 +22,9 @@ def get_form_info(fname):
         if not line.startswith('#'):
             ls = line.strip().split()
             line_name = ls[0].split('-')
-            line_info['-'.join(line_name[:2])].append(ls)
+            form_to_author[from_name] = ls[1]
+            form_name = '-'.join(line_name[:2])
+            line_info[form_name].append(ls)
 
     X = 4
     Y = 5
@@ -35,10 +38,10 @@ def get_form_info(fname):
             w = int(line[W])
             h = int(line[H])
             form_info[form].append(bbox(x, y, x+w, y+h))
-    return form_info
+    return form_to_author, form_info
 
 
-def process_folder(input_path, output_fname, form_info):
+def process_folder(input_path, output_fname, form_to_author, form_info):
     '''
     Takes input data, normalizes lines and saves to hdf5 (assumes data is organized as input_path/author/form/line#.png)
     '''
@@ -48,12 +51,18 @@ def process_folder(input_path, output_fname, form_info):
     split_files = []
     for png_file in png_files:
         form_name = os.path.basename(png_file).split('.')[0]
-        author = form_name.split('-')[0]
+        # author = form_name.split('-')[1]
+        # a1 = author
+        # if author.find('.') != -1:
+        #     # Strip off extension
+        #     author = author[: author.find('.') ]
+        # while not author[-1].isdigit() and len(author) > 0:
+        #     author = author[:-1]
+        author = form_to_author[form_name]
         split_files.append((author, form_name, png_file))
 
     # Open Output File
     fOut = h5py.File(output_fname, 'w')
-
     seen_authors = {}
     num_items = len(split_files)
     count = 0
@@ -74,7 +83,7 @@ def process_folder(input_path, output_fname, form_info):
 
         count += 1
 
-        if count %100 == 0:
+        if count %10 == 0:
             print 'Completed %d of %d'%(count, num_items)
 
     fOut.close()
@@ -87,8 +96,8 @@ def main():
     line_fname = sys.argv[1]
     input_directory = sys.argv[2]
     output_hdf5_fname = sys.argv[3]
-    form_info = get_form_info(line_fname)
-    process_folder(input_directory, output_hdf5_fname, form_info)
+    form_to_author, form_info = get_form_info(line_fname)
+    process_folder(input_directory, output_hdf5_fname, form_to_author, form_info)
 
 if __name__ == "__main__":
     main()
