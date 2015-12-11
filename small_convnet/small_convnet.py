@@ -22,7 +22,7 @@ from data_iters.iam_hdf5_iterator import IAM_MiniBatcher
 def create_model(num_authors, shingle_dim, lr):
     model = Sequential()
     model.add(Convolution2D(48, 12, 12,
-                        border_mode='full',
+                        border_mode='valid',
                         input_shape=(1, shingle_dim[0], shingle_dim[1]),
                         activation='relu'))
 
@@ -30,12 +30,14 @@ def create_model(num_authors, shingle_dim, lr):
     model.add(MaxPooling2D(pool_size=(2,2)))
     model.add(Dropout(0.25))
 
-    model.add(Convolution2D(128, 6, 6, border_mode = 'full', activation='relu'))
+    #model.add(Convolution2D(128, 6, 6, border_mode = 'full', activation='relu'))
+    model.add(Convolution2D(128, 6, 6, border_mode = 'valid', activation='relu'))
     #model.add(BN(epsilon=1e-6))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     #model.add(Dropout(0.5))
 
-    model.add(Convolution2D(128, 3, 3, border_mode = 'full', activation='relu'))
+    #model.add(Convolution2D(128, 3, 3, border_mode = 'full', activation='relu'))
+    model.add(Convolution2D(128, 3, 3, border_mode = 'valid', activation='relu'))
     #model.add(BN(epsilon=1e-6))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.5))
