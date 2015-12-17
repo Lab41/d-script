@@ -1,6 +1,6 @@
 # D*SCRIPT
 
-In this directory, you will find:
+In this directory, you will find folders for:
 
 * Data preparation
 * Data iterators
