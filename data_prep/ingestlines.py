@@ -10,8 +10,10 @@ form_path = 'data/forms/'
 line_path = 'data/lines/'
 word_path = 'data/words/'
 
+### IAM DATASET ###
+
 # Do the mapping from form to author and from author to form
-if True:
+if False:
     forms_unproc = open('data/forms.txt','r').read().splitlines()
     forms=[]
     for line in forms_unproc:
@@ -35,7 +37,7 @@ if True:
 # Make an hdf5 file for all the lines
 #  1. Get read from the original image
 #  2. Write image section to HDF5 file
-if True:
+if False:
     author_lines_file='author_lines_debug.hdf5'
     lines_file='lines_debug.hdf5'
 
@@ -102,6 +104,46 @@ if False:
             author_groups[the_author].create_dataset( the_line[0], data=the_box.astype(numpy.uint8))
             data_group = w_fout.create_dataset( the_line[0], data=the_box.astype(numpy.uint8) )
             data_group.attrs.create( 'author', the_author )
+
+    w_fout.close()
+    aw_fout.close()
+
+### ICDAR 2013 DATASET ###
+if True:
+    author_words_file='author_icdar.hdf5'
+    words_file = 'icdar.hdf5'
+
+    icdar13exdir = os.listdir('icdar13/experimental')
+
+    ai_fout = h5py.File(author_words_file,'w')
+    i_fout = h5py.File(words_file,'w')
+    author_groups = {}
+
+    # Create groups for HDF5 to write out
+    for the_file in icdar13exdir:
+        the_author=the_file.split('_')[0]
+        if not author_groups.has_key(the_author):
+            author_groups[the_author] = aw_fout.create_group(the_author)
+if False:
+    for line in words_unproc:
+        if not line[0]=='#':
+            the_line = line.split()
+            the_form = the_line[0].split('-')
+            the_form = '-'.join((the_form[0], the_form[1]))
+            the_author = form2author[the_form]
+            if from_form:
+                (x,y,w,h) = [int(xywh) for xywh in the_line[3:7]]
+                the_image = scipy.misc.imread( form_path+the_form+'.png' )
+                the_box = the_image[y:y+h,x:x+w]
+            else:
+                the_box = scipy.misc.imread( word_path+the_line[0].split('-')[0]+'/'+
+                                             the_form+'/'+the_line[0]+'.png' )
+            author_groups[the_author].create_dataset( the_line[0], data=the_box.astype(numpy.uint8))
+            data_group = w_fout.create_dataset( the_line[0], data=the_box.astype(numpy.uint8) )
+            data_group.attrs.create( 'author', the_author )
+
+            break
+
 
     w_fout.close()
     aw_fout.close()
