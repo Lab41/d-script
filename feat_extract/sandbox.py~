@@ -1,0 +1,34 @@
+if False:
+    execfile('extractfeats.py')
+
+# Let's test the feature extractor out!
+f_test = featmodel.predict(X_test)
+
+# Let's apply the feature extractor to an entire form.
+im = smi.imread('/fileserver/iam/forms/h07-025a.png')
+
+if False:
+    print "Compiling all convolutional model, without dense layers"
+    modelconvs = Sequential()
+    for i in xrange(15):
+        modelconvs.add( model.layers[i] )
+    modelconvs.compile( loss='mse', optimizer='sgd' )
+    f_convs = modelconvs.predict(X_test)
+
+if False:
+    print "Compiling all convolutional model, with dense layers"
+    model1dense = Sequential()
+    for i in xrange(17):
+        model1dense.add( model.layers[i] )
+    model1dense.compile( loss='mse', optimizer='sgd' )
+    f_1dense= model1dense.predict(X_test)
+
+dense_weights = model.layers[16].get_weights()
+
+modeld2c = Sequential()
+for i in xrange(15):
+    modeld2c.add( model.layers[i] )
+modeld2c.add( Convolution2D( 128, 10, 10, border_mode = 'valid' ) )
+modeld2c.add( Activation('relu') )
+    
+modeld2c.predict( X_test )

@@ -51,5 +51,3 @@ f_test = featmodel.predict(X_test)
 # Let's apply the feature extractor to an entire form.
 im = smi.imread('/fileserver/iam/forms/h07-025a.png')
 
-
-

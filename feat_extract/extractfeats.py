@@ -51,5 +51,12 @@ f_test = featmodel.predict(X_test)
 # Let's apply the feature extractor to an entire form.
 im = smi.imread('/fileserver/iam/forms/h07-025a.png')
 
-
-
+# Let's convert some dense layers into convolutional layers
+dense_weights = model.layers[16].get_weights()
+modeld2c = Sequential()
+for i in xrange(15):
+    modeld2c.add( model.layers[i] )
+modeld2c.add( Convolution2D( 128, 10, 10, border_mode = 'valid' ) )
+modeld2c.add( Activation('relu') )
+    
+modeld2c.predict( X_test )
