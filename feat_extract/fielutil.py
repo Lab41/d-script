@@ -16,25 +16,14 @@ from keras.utils.np_utils import to_categorical
 from keras.layers.normalization import BatchNormalization as BN
 
 import matplotlib.pylab as plt
-# %matplotlib inline
-
 import sys
 sys.path.append('/work/code/repo/d-script/')
 # d-script imports
 from data_iters.minibatcher import MiniBatcher
 from data_iters.iam_hdf5_iterator import IAM_MiniBatcher
 
-hdf5_file = h5py.File('/work/code/docingest/lines/lines.hdf5','r')
-author_hdf5_file = h5py.File('/work/code/docingest/lines/author_lines.hdf5','r')
-file_list = hdf5_file.keys()
 num_authors=47
-num_forms_per_author=500
 shingle_dim=(120,120)
-use_form=True
-
-batch_size=32
-lr = 0.01
-total_iters=1000
 
 from PIL import Image
 def randangle(batch):
@@ -82,7 +71,7 @@ def get_batch( author_hdf5_file, author_ids, shingle_size=(120,120), data_size=3
         
     return author_batch, author_truth
 
-def fielnet( hdf5file ):
+def fielnet( hdf5file, compile=False ):
     model = Sequential()
     model.add(Convolution2D(48, 12, 12,
                         border_mode='valid',
@@ -125,10 +114,11 @@ def fielnet( hdf5file ):
     model.add(Dense(num_authors))
     model.add(Activation('softmax'))
 
-    print "Compiling model"
-    sgd = SGD(lr=0.1, decay=1e-6, momentum=0.7, nesterov=False)
-    model.compile(loss='categorical_crossentropy', optimizer=sgd)
-    print "Finished compilation"
+    if compile:
+        print "Compiling model"
+        sgd = SGD(lr=0.1, decay=1e-6, momentum=0.7, nesterov=False)
+        model.compile(loss='categorical_crossentropy', optimizer=sgd)
+        print "Finished compilation"
 
     # model.load_weights('../convnets/fielnet/fielnet.hdf5')
     model.load_weights( hdf5file )
