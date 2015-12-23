@@ -1,4 +1,3 @@
-import random
 import numpy as np
 from collections import defaultdict
 
@@ -6,7 +5,9 @@ class MiniBatcher:
     TRAIN = 0
     TEST = 1
     VAL = 2
-    def __init__(self, hdf5_file, input_keys, item_getter=None, normalize=None, batch_size=32, min_shingles=8*15, train_pct=.7, test_pct=.2, val_pct=.1):
+    def __init__(self, hdf5_file, input_keys, item_getter=None, normalize=None,
+                 batch_size=32, min_shingles=8*15, 
+                 train_pct=.7, test_pct=.2, val_pct=.1, rng_seed=888):
         self.mode = self.TRAIN
         self.fIn = hdf5_file
         self.batch_size = batch_size
@@ -18,7 +19,9 @@ class MiniBatcher:
         self.test_pct = test_pct
         self.val_pct = val_pct
 
-        random.seed(1024) # Repeatable
+        #random.seed(1024) # Repeatable
+        self.randgen = np.random.RandomState()
+        self.randgen.seed(rng_seed)
 
         # Unfortunately we have to iterate through a few times to make sure we do this right
         # First we get counts to make sure we exclude items without sufficient data
@@ -71,7 +74,7 @@ class MiniBatcher:
         for i in range(len(input_keys)):
             top_level_key = input_keys[i][0]
             if top_level_key in self.name_2_id:
-                num = random.random()
+                num = self.randgen.random()
                 if num < train_pct:
                     self.train.append(input_keys[i])
                 elif num < train_pct + test_pct:
@@ -96,7 +99,7 @@ class MiniBatcher:
 
         # Randomize batch
         batch_keys = []
-        randints = np.random.randint(0, len(src_arr) -1, self.batch_size)
+        randints = self.randgen.randint(0, len(src_arr) -1, self.batch_size)
         for i in range(self.batch_size):
             ind = randints[i]
             try:
