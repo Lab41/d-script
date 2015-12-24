@@ -31,13 +31,22 @@ class IAM_MiniBatcher:
         max_y = max(height - shingle_dim[0], 1)
         x_start = np.random.randint(0, max_x)
         y_start = np.random.randint(0, max_y)
-        if width < shingle_dim[1] or height < shingle_dim[0]: # The line is too small on at least one axis
-            output_arr = np.zeros(shingle_dim)
-            output_arr.fill(255)
-            output_arr[:height,:width] = original_line[:min(height, shingle_dim[0]), :min(width, shingle_dim[1])]
-            return output_arr
+        # check if the line is too small on at least one axis
+        if width < shingle_dim[1]:
+            x_slice = slice(0,width)
         else:
-            return original_line[y_start:y_start+ shingle_dim[0], x_start:x_start+shingle_dim[1]]
+            x_slice = slice(x_start, x_start+shingle_dim[1])
+        if  height < shingle_dim[0]: 
+            y_slice = slice(0,height)
+        else:
+            y_slice = slice(y_start, y_start+shingle_dim[1])
+        slice_width = x_slice.stop - x_slice.start
+        slice_height = y_slice.stop - y_slice.start
+        # create an output shingle, copy our thing onto it
+        output_arr = np.zeros(shingle_dim)
+        output_arr.fill(255)
+        output_arr[:slice_height,:slice_width] = original_line[y_slice, x_slice]
+        return output_arr
 
     def __init__(self, fname, num_authors, num_forms_per_author, use_form=False, default_mode=MiniBatcher.TRAIN, shingle_dim=(120,120), batch_size=32):
         self.hdf5_file = fname
