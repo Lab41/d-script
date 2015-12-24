@@ -19,9 +19,7 @@ class MiniBatcher:
         self.test_pct = test_pct
         self.val_pct = val_pct
 
-        #random.seed(1024) # Repeatable
-        self.randgen = np.random.RandomState()
-        self.randgen.seed(rng_seed)
+        np.random.seed(rng_seed)
 
         # Unfortunately we have to iterate through a few times to make sure we do this right
         # First we get counts to make sure we exclude items without sufficient data

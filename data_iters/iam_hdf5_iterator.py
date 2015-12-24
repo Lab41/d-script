@@ -1,5 +1,4 @@
 import h5py
-import random
 import numpy as np
 from collections import defaultdict
 from minibatcher import MiniBatcher
@@ -28,8 +27,8 @@ class IAM_MiniBatcher:
         (height, width) = original_line.shape
         max_x = max(width - shingle_dim[1], 0)
         max_y = max(height - shingle_dim[0], 0)
-        x_start = random.randint(0, max_x)
-        y_start = random.randint(0, max_y)
+        x_start = np.random.randint(0, max_x)
+        y_start = np.random.randint(0, max_y)
         if width < shingle_dim[1] or height < shingle_dim[0]: # The line is too small in at least one access
             output_arr = np.zeros(shingle_dim)
             output_arr.fill(255)
