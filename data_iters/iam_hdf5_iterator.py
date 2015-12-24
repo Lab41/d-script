@@ -8,6 +8,7 @@ class IAM_MiniBatcher:
     def shingle_item_getter(f, key, shingle_dim=(120,120), use_form=False):
         '''
         Retrieve a line from an iam hdf5 file and shingle into the line
+        NB: shingle_dim is in rows, cols format
         '''
 
         if use_form:
@@ -24,12 +25,13 @@ class IAM_MiniBatcher:
             original_line = f[author][form][line]
 
         # Pull shingle from the line
+        # TODO: pull out shingle_dim[n] into two holder variables
         (height, width) = original_line.shape
-        max_x = max(width - shingle_dim[1], 0)
-        max_y = max(height - shingle_dim[0], 0)
+        max_x = max(width - shingle_dim[1], 1)
+        max_y = max(height - shingle_dim[0], 1)
         x_start = np.random.randint(0, max_x)
         y_start = np.random.randint(0, max_y)
-        if width < shingle_dim[1] or height < shingle_dim[0]: # The line is too small in at least one access
+        if width < shingle_dim[1] or height < shingle_dim[0]: # The line is too small on at least one axis
             output_arr = np.zeros(shingle_dim)
             output_arr.fill(255)
             output_arr[:height,:width] = original_line[:min(height, shingle_dim[0]), :min(width, shingle_dim[1])]

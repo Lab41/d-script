@@ -72,7 +72,7 @@ class MiniBatcher:
         for i in range(len(input_keys)):
             top_level_key = input_keys[i][0]
             if top_level_key in self.name_2_id:
-                num = self.randgen.random()
+                num = np.random.random()
                 if num < train_pct:
                     self.train.append(input_keys[i])
                 elif num < train_pct + test_pct:
@@ -97,7 +97,7 @@ class MiniBatcher:
 
         # Randomize batch
         batch_keys = []
-        randints = self.randgen.randint(0, len(src_arr) -1, self.batch_size)
+        randints = np.random.randint(0, len(src_arr), self.batch_size)
         for i in range(self.batch_size):
             ind = randints[i]
             try:
