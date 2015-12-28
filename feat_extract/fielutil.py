@@ -71,7 +71,7 @@ def get_batch( author_hdf5_file, author_ids, shingle_size=(120,120), data_size=3
         
     return author_batch, author_truth
 
-def fielnet( hdf5file, compile=False ):
+def fielnet( hdf5file, layer='softmax', compile=False ):
     model = Sequential()
     model.add(Convolution2D(48, 12, 12,
                         border_mode='valid',
@@ -106,21 +106,31 @@ def fielnet( hdf5file, compile=False ):
     model.add(Dense(128))
     model.add(BN())
     model.add(Activation('relu'))
+    
     model.add(Dense(128))
     model.add(BN())
     model.add(Activation('relu'))
     #model.add(Dropout(0.5))
 
     model.add(Dense(num_authors))
-    model.add(Activation('softmax'))
 
+    if layer=='fc8':
+        f = h5py.File(hdf5file)
+        for k in range((f.attrs['nb_layers']) - 1):
+            g = f['layer_{}'.format(k)]
+            weights = [g['param_{}'.format(p)] for p in range(g.attrs['nb_params'])]
+            model.layers[k].set_weights( weights )
+        f.close()
+        return model
+        
+    model.add(Activation('softmax'))
+    
     if compile:
         print "Compiling model"
         sgd = SGD(lr=0.1, decay=1e-6, momentum=0.7, nesterov=False)
         model.compile(loss='categorical_crossentropy', optimizer=sgd)
         print "Finished compilation"
 
-    # model.load_weights('../convnets/fielnet/fielnet.hdf5')
     model.load_weights( hdf5file )
 
     return model
