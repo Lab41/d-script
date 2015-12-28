@@ -35,7 +35,7 @@ class MiniBatcher:
         self.batch_size = batch_size
         self.min_fragments = min_fragments
 
-        self.normailize = normalize
+        self.normalize = normalize
 
         self.train_pct = train_pct
         self.test_pct = test_pct
@@ -134,8 +134,8 @@ class MiniBatcher:
 
             data = self.item_getter(self.fIn, key)
 
-            if self.normailize:
-                data = self.normailize(data)
+            if self.normalize:
+                data = self.normalize(data)
 
             if batch_data is None:
                 data_shape = data.shape
