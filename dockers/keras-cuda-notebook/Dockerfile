@@ -22,6 +22,7 @@ RUN cd /root && \
     pip install notebook 
 
 ADD / bootstrap.sh
+RUN chmod a+x bootstrap.sh
 
 EXPOSE 8888
 

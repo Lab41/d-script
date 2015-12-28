@@ -21,4 +21,4 @@ docker run -it\
         --volume=/data/fs4/datasets/:$__volume_data \
         --volume=/dev/shm:/memory \
         --publish=$__ipython_port:8888 \
-        $__image bootstrap.sh
+        $__image /bootstrap.sh
