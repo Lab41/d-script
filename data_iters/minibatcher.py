@@ -6,8 +6,30 @@ class MiniBatcher:
     TEST = 1
     VAL = 2
     def __init__(self, hdf5_file, input_keys, item_getter=None, normalize=None,
-                 batch_size=32, min_shingles=8*15, 
+                 batch_size=32, min_shingles=10, 
                  train_pct=.7, test_pct=.2, val_pct=.1, rng_seed=888):
+        """
+        Set up MiniBatcher with replicable train/test/validation
+        splitting functionality.
+
+        Arguments:
+            hdf5_file -- h5py File object, pointing to your data
+            input_keys -- list of 2-tuples, providing 
+                author/group id and form/document id
+            item_getter -- function object taking two arguments,
+                an object supporting indexing and the index used
+                to index into it. Should return the item in the 
+                first argument referred to by the second argument
+            normalize -- Can be None; if not, a 1-argument function object
+                which will called on every item in the dataset 
+            batch_size -- mini-batch size
+            min_shingles -- for each author/grouping factor, what is
+                the minimum number of documents required to be included
+                (TODO: change name?)
+            train_pct, test_pct, val_pct -- what fractions of data are to be
+                assigned to data subsets?
+            rng_seed -- random number generator seed
+        """
         self.mode = self.TRAIN
         self.fIn = hdf5_file
         self.batch_size = batch_size
@@ -69,7 +91,10 @@ class MiniBatcher:
         self.train = []
         self.test = []
         self.val = []
+        # loop over authors, dispatch individual "forms" (/lines) 
+        # into train/test/val, appropriately
         for i in range(len(input_keys)):
+            # aka author key
             top_level_key = input_keys[i][0]
             if top_level_key in self.name_2_id:
                 num = np.random.random()
