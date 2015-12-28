@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 from collections import defaultdict
 
@@ -91,21 +92,36 @@ class MiniBatcher:
         self.train = []
         self.test = []
         self.val = []
+        # maintain references to all three sets, at least locally
+        # TODO: consider using only list-of-lists for subsets, to avoid code duplication?
+        all_subsets = [self.train, self.test, self.val]
         # loop over authors, dispatch individual "forms" (/lines) 
         # into train/test/val, appropriately
-        for i in range(len(input_keys)):
-            # aka author key
-            top_level_key = input_keys[i][0]
-            if top_level_key in self.name_2_id:
-                num = np.random.random()
-                if num < train_pct:
-                    self.train.append(input_keys[i])
-                elif num < train_pct + test_pct:
-                    self.test.append(input_keys[i])
-                else:
-                    self.val.append(input_keys[i])
-
-
+        authors_in_set = set([ input_keys[i][0] for i in range(len(input_keys)) if input_keys[i][0] in self.name_2_id])
+        authors_forms_keys = tuples_to_dict(input_keys) 
+        # delete authors who don't meet criteria
+        for key in authors_forms_keys:
+            if key not in authors_in_set:
+                del authors_forms_keys[key]
+        # loop over authors, shuffle associated form keys, and divide into train/test/val
+        for author_key in authors_forms_keys:
+            author_form_list = [ (author_key, form_key) for form_key in authors_forms_keys[author_key] ]
+            np.random.shuffle(author_form_list)
+            # build list of cutoffs for list of (shuffled) keys
+            num_forms = len(author_form_list)
+            probability_thresholds = [ train_pct, train_pct + test_pct, train_pct + test_pct + val_pct ] 
+            subset_cutoffs = [0] + [ int(np.round(p * num_forms)) for p in probability_thresholds ]
+            # divide into subsets
+            subset_indices = [ subset_cutoffs[i:i+2] for i in range(len(subset_cutoffs) - 1) ]
+            for set_i, (set_start, set_end) in enumerate(subset_indices):
+                if set_end-set_start == 0:
+                    logger = logging.get_logger(__name__)
+                    logger.warning("Set {0} being assigned zero documents for author {1},"
+                                   " maybe increase minimum docs per author?".format(
+                                    set_i, author_key))
+                # assign to appropriate subset
+                all_subsets[set_i].extend(author_form_list[set_start:set_end])
+                    
     def set_mode(self, mode):
         if mode not in set([self.TRAIN, self.TEST, self.VAL]):
             raise ValueError('Invalid mode specified (%s)'%(str(mode)))
@@ -154,3 +170,9 @@ class MiniBatcher:
 
         # Return randomized batch
         return (batch_data, ids_in_batch)
+
+def tuples_to_dict(pairs):
+    d = {}
+    for key, val in pairs:
+        d.setdefault(x, []).append(val)
+    return d
