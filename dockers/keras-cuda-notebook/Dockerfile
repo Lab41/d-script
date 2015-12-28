@@ -21,6 +21,8 @@ RUN cd /root && \
     cd tornado-4.1 && python setup.py install && \
     pip install notebook 
 
+ADD / bootstrap.sh
+
 EXPOSE 8888
 
 CMD ["ipython", "notebook", "--ip='*'", "--no-browser"]
