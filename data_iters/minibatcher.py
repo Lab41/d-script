@@ -6,7 +6,7 @@ class MiniBatcher:
     TRAIN = 0
     TEST = 1
     VAL = 2
-    def __init__(self, hdf5_file, input_keys, item_getter=None, normalize=None,
+    def __init__(self, hdf5_file, input_keys, item_getter, normalize=None,
                  batch_size=32, min_fragments=10, 
                  train_pct=.7, test_pct=.2, val_pct=.1, rng_seed=888):
         """
@@ -62,32 +62,8 @@ class MiniBatcher:
             else:
                 print id_str, id_count, min_fragments
 
-        # # TODO: remove this hack, this is
-        # print 'Num Input Keys:', len(input_keys)
-        # keys_wo_shingles = set()
-        # for key in input_keys:
-        #     #print key[0]
-        #     keys_wo_shingles.add(key[0])
-        # keys_wo_shingles = list(keys_wo_shingles)
-        # print 'Num Keys wo shingles (forms):', len(keys_wo_shingles)
+        self.item_getter = item_getter
 
-
-        if item_getter:
-            self.item_getter = item_getter
-        else:
-            key_depth = len(input_keys[0][0])
-            print 'Key Depth: ', key_depth
-            print 'Sample Key:', input_keys[0][0]
-            if key_depth == 1:
-                self.item_getter = lambda x, (l1, i): x[l1][i]
-            elif key_depth == 2:
-                self.item_getter = lambda x, ((l1,l2),i): x[l1][l2][i]
-            elif key_depth == 3:
-                self.item_getter = lambda x, ((l1,l2,l3),i): x[l1][l2][l3][i]
-            else:
-                raise NotImplementedError("Key depth of %d not supported"%key_depth)
-
-        #print keys_wo_shingles[:10]
         # Create training/test/validation
         self.train = []
         self.test = []
