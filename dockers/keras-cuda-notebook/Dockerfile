@@ -21,7 +21,7 @@ RUN cd /root && \
     cd tornado-4.1 && python setup.py install && \
     pip install notebook 
 
-ADD / bootstrap.sh
+ADD bootstrap.sh /
 RUN chmod a+x bootstrap.sh
 
 EXPOSE 8888
