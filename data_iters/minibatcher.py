@@ -7,7 +7,7 @@ class MiniBatcher:
     TEST = 1
     VAL = 2
     def __init__(self, hdf5_file, input_keys, item_getter=None, normalize=None,
-                 batch_size=32, min_shingles=10, 
+                 batch_size=32, min_fragments=10, 
                  train_pct=.7, test_pct=.2, val_pct=.1, rng_seed=888):
         """
         Set up MiniBatcher with replicable train/test/validation
@@ -16,7 +16,7 @@ class MiniBatcher:
         Arguments:
             hdf5_file -- h5py File object, pointing to your data
             input_keys -- list of 2-tuples, providing 
-                author/group id and form/document id
+                author id and fragment (form, line, word,etc.) id 
             item_getter -- function object taking two arguments,
                 an object supporting indexing and the index used
                 to index into it. Should return the item in the 
@@ -24,9 +24,8 @@ class MiniBatcher:
             normalize -- Can be None; if not, a 1-argument function object
                 which will called on every item in the dataset 
             batch_size -- mini-batch size
-            min_shingles -- for each author/grouping factor, what is
-                the minimum number of documents required to be included
-                (TODO: change name?)
+            min_fragments -- for each author, what is
+                the minimum number of fragments required to be included?
             train_pct, test_pct, val_pct -- what fractions of data are to be
                 assigned to data subsets?
             rng_seed -- random number generator seed
@@ -34,7 +33,7 @@ class MiniBatcher:
         self.mode = self.TRAIN
         self.fIn = hdf5_file
         self.batch_size = batch_size
-        self.min_shingles = min_shingles
+        self.min_fragments = min_fragments
 
         self.normailize = normalize
 
@@ -47,21 +46,21 @@ class MiniBatcher:
 
         # Unfortunately we have to iterate through a few times to make sure we do this right
         # First we get counts to make sure we exclude items without sufficient data
-        top_level_counts = defaultdict(int)
+        author_counts = defaultdict(int)
         for i in range(len(input_keys)):
-            top_level_key = input_keys[i][0]
-            top_level_counts[top_level_key] += 1
+            author_key = input_keys[i][0]
+            author_counts[author_key] += 1
 
         # Then we calculate mappings for items with a sufficient number of shingles
         self.name_2_id = {}
         id_num = 0
         # Assume top level of dictionary specifies groups
-        for (id_str, id_count) in top_level_counts.items():
-            if id_count >= min_shingles:
+        for (id_str, id_count) in author_counts.items():
+            if id_count >= min_fragments:
                 self.name_2_id[id_str] = id_num
                 id_num += 1
             else:
-                print id_str, id_count, min_shingles
+                print id_str, id_count, min_fragments
 
         # # TODO: remove this hack, this is
         # print 'Num Input Keys:', len(input_keys)
@@ -96,22 +95,22 @@ class MiniBatcher:
         # maintain references to all three sets, at least locally
         # TODO: consider using only list-of-lists for subsets, to avoid code duplication?
         all_subsets = [self.train, self.test, self.val]
-        # loop over authors, dispatch individual "forms" (/lines) 
+        # loop over authors, dispatch individual fragments 
         # into train/test/val, appropriately
         authors_in_set = set([ input_keys[i][0] for i in range(len(input_keys)) if input_keys[i][0] in self.name_2_id])
-        authors_forms_keys = tuples_to_dict(input_keys) 
+        authors_fragments_keys = tuples_to_dict(input_keys) 
         # delete authors who don't meet criteria
-        for key in authors_forms_keys:
+        for key in authors_fragments_keys:
             if key not in authors_in_set:
-                del authors_forms_keys[key]
-        # loop over authors, shuffle associated form keys, and divide into train/test/val
-        for author_key in authors_forms_keys:
-            author_form_list = [ (author_key, form_key) for form_key in authors_forms_keys[author_key] ]
-            np.random.shuffle(author_form_list)
+                del authors_fragments_keys[key]
+        # loop over authors, shuffle associated fragment keys, and divide into train/test/val
+        for author_key in authors_fragments_keys:
+            author_fragment_list = [ (author_key, fragment_key) for fragment_key in authors_fragments_keys[author_key] ]
+            np.random.shuffle(author_fragment_list)
             # build list of cutoffs for list of (shuffled) keys
-            num_forms = len(author_form_list)
+            num_fragments = len(author_fragment_list)
             probability_thresholds = [ train_pct, train_pct + test_pct, train_pct + test_pct + val_pct ] 
-            subset_cutoffs = [0] + [ int(np.round(p * num_forms)) for p in probability_thresholds ]
+            subset_cutoffs = [0] + [ int(np.round(p * num_fragments)) for p in probability_thresholds ]
             # divide into subsets
             subset_indices = [ subset_cutoffs[i:i+2] for i in range(len(subset_cutoffs) - 1) ]
             for set_i, (set_start, set_end) in enumerate(subset_indices):
@@ -120,7 +119,7 @@ class MiniBatcher:
                                    " maybe increase minimum docs per author?".format(
                                     set_i, author_key))
                 # assign to appropriate subset
-                all_subsets[set_i].extend(author_form_list[set_start:set_end])
+                all_subsets[set_i].extend(author_fragment_list[set_start:set_end])
                     
     def set_mode(self, mode):
         if mode not in set([self.TRAIN, self.TEST, self.VAL]):
