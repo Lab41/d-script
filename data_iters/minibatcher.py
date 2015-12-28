@@ -43,6 +43,7 @@ class MiniBatcher:
         self.val_pct = val_pct
 
         np.random.seed(rng_seed)
+        logger = logging.getLogger(__name__)
 
         # Unfortunately we have to iterate through a few times to make sure we do this right
         # First we get counts to make sure we exclude items without sufficient data
@@ -115,7 +116,6 @@ class MiniBatcher:
             subset_indices = [ subset_cutoffs[i:i+2] for i in range(len(subset_cutoffs) - 1) ]
             for set_i, (set_start, set_end) in enumerate(subset_indices):
                 if set_end-set_start == 0:
-                    logger = logging.get_logger(__name__)
                     logger.warning("Set {0} being assigned zero documents for author {1},"
                                    " maybe increase minimum docs per author?".format(
                                     set_i, author_key))
@@ -174,5 +174,5 @@ class MiniBatcher:
 def tuples_to_dict(pairs):
     d = {}
     for key, val in pairs:
-        d.setdefault(x, []).append(val)
+        d.setdefault(key, []).append(val)
     return d
