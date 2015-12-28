@@ -1,3 +1,4 @@
+import logging
 import h5py
 import numpy as np
 from collections import defaultdict
@@ -129,8 +130,10 @@ def main():
     parser.add_option("--shingle_dim", dest='shingle_dim', help="Shingle dimensions, comma separated i.e. 120,120")
     parser.add_option("--batch_size", dest="batch_size", type=int, default=32, help="Iteration Batch Size")
     parser.add_option("--from_form", dest="use_form", action='store_true', default=False)
+    parser.add_option("--log_level", dest="log_level", type=int, default=logging.WARNING)
     (options, args) = parser.parse_args()
 
+    logging.basicConfig(level=options.log_level)
     shingle_dim = map(int, options.shingle_dim.split(','))
 
     iam_m = IAM_MiniBatcher(options.filename, options.num_authors, options.num_forms_per_author,
@@ -143,6 +146,7 @@ def main():
         z = iam_m.get_train_batch()
 
     print 'Completed %d batches in: '%num_batches,time.time() - start_time
-    print z[0].shape
+    print 'Batch shape: ', z[0].shape
+    print 'Number of unique authors in first batch: {}'.format(len(set(z[1])))
 if __name__ == "__main__":
     main()
