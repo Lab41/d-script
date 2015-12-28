@@ -35,7 +35,7 @@ class MiniBatcher:
         self.batch_size = batch_size
         self.min_fragments = min_fragments
 
-        self.normailize = normalize
+        self.normalize = normalize
 
         self.train_pct = train_pct
         self.test_pct = test_pct
@@ -51,7 +51,7 @@ class MiniBatcher:
             author_key = input_keys[i][0]
             author_counts[author_key] += 1
 
-        # Then we calculate mappings for items with a sufficient number of shingles
+        # Then we calculate mappings for items with a sufficient number of available fragments
         self.name_2_id = {}
         id_num = 0
         # Assume top level of dictionary specifies groups
@@ -60,7 +60,7 @@ class MiniBatcher:
                 self.name_2_id[id_str] = id_num
                 id_num += 1
             else:
-                print id_str, id_count, min_fragments
+                logger.debug("Skipped author {0}, with {1} fragments (min_fragments={2})".format(id_str, id_count, min_fragments))
 
         self.item_getter = item_getter
 
@@ -134,8 +134,8 @@ class MiniBatcher:
 
             data = self.item_getter(self.fIn, key)
 
-            if self.normailize:
-                data = self.normailize(data)
+            if self.normalize:
+                data = self.normalize(data)
 
             if batch_data is None:
                 data_shape = data.shape
