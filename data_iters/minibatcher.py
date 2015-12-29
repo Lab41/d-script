@@ -7,7 +7,7 @@ class MiniBatcher:
     TEST = 1
     VAL = 2
     def __init__(self, hdf5_file, input_keys, item_getter, normalize=None,
-                 batch_size=32, min_fragments=10, 
+                 batch_size=32, min_fragments=3, 
                  train_pct=.7, test_pct=.2, val_pct=.1, rng_seed=888):
         """
         Set up MiniBatcher with replicable train/test/validation
