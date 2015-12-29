@@ -75,12 +75,10 @@ class MiniBatcher:
         # into train/test/val, appropriately
         authors_in_set = set([ input_keys[i][0] for i in range(len(input_keys)) if input_keys[i][0] in self.name_2_id])
         authors_fragments_keys = tuples_to_dict(input_keys) 
-        # delete authors who don't meet criteria, forcing iteration over static list of keys
-        for key in list(authors_fragments_keys.keys()):
-            if key not in authors_in_set:
-                del authors_fragments_keys[key]
         # loop over authors, shuffle associated fragment keys, and divide into train/test/val
         for author_key in authors_fragments_keys:
+            if key not in authors_in_set:
+                continue
             author_fragment_list = [ (author_key, fragment_key) for fragment_key in authors_fragments_keys[author_key] ]
             np.random.shuffle(author_fragment_list)
             # build list of cutoffs for list of (shuffled) keys
