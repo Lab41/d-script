@@ -76,7 +76,7 @@ class MiniBatcher:
         authors_in_set = set([ input_keys[i][0] for i in range(len(input_keys)) if input_keys[i][0] in self.name_2_id])
         authors_fragments_keys = tuples_to_dict(input_keys) 
         # delete authors who don't meet criteria
-        for key in authors_fragments_keys:
+        for key in authors_fragments_keys.keys():
             if key not in authors_in_set:
                 del authors_fragments_keys[key]
         # loop over authors, shuffle associated fragment keys, and divide into train/test/val
