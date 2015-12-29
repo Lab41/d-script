@@ -82,7 +82,7 @@ class IAM_MiniBatcher:
         item_getter = lambda f, key: IAM_MiniBatcher.shingle_item_getter(f, key, shingle_dim)
         self.batch_size = batch_size
         m = MiniBatcher(fIn, keys,item_getter=item_getter, normalize=normalize,
-                        batch_size=self.batch_size)
+                        batch_size=self.batch_size, min_fragments=0)
         self.m = m
         self.default_mode = default_mode
 

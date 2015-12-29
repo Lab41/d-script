@@ -7,7 +7,7 @@ class MiniBatcher:
     TEST = 1
     VAL = 2
     def __init__(self, hdf5_file, input_keys, item_getter, normalize=None,
-                 batch_size=32, min_fragments=10, 
+                 batch_size=32, min_fragments=3, 
                  train_pct=.7, test_pct=.2, val_pct=.1, rng_seed=888):
         """
         Set up MiniBatcher with replicable train/test/validation
@@ -75,12 +75,10 @@ class MiniBatcher:
         # into train/test/val, appropriately
         authors_in_set = set([ input_keys[i][0] for i in range(len(input_keys)) if input_keys[i][0] in self.name_2_id])
         authors_fragments_keys = tuples_to_dict(input_keys) 
-        # delete authors who don't meet criteria
-        for key in authors_fragments_keys:
-            if key not in authors_in_set:
-                del authors_fragments_keys[key]
         # loop over authors, shuffle associated fragment keys, and divide into train/test/val
         for author_key in authors_fragments_keys:
+            if author_key not in authors_in_set:
+                continue
             author_fragment_list = [ (author_key, fragment_key) for fragment_key in authors_fragments_keys[author_key] ]
             np.random.shuffle(author_fragment_list)
             # build list of cutoffs for list of (shuffled) keys
