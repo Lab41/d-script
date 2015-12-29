@@ -77,7 +77,7 @@ class MiniBatcher:
         authors_fragments_keys = tuples_to_dict(input_keys) 
         # loop over authors, shuffle associated fragment keys, and divide into train/test/val
         for author_key in authors_fragments_keys:
-            if key not in authors_in_set:
+            if author_key not in authors_in_set:
                 continue
             author_fragment_list = [ (author_key, fragment_key) for fragment_key in authors_fragments_keys[author_key] ]
             np.random.shuffle(author_fragment_list)
