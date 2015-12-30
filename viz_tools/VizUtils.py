@@ -1,6 +1,8 @@
 import os
 import re
 import matplotlib.pylab as plt
+import PIL.Image as Image
+import numpy
 
 def viz_layer1( model ):
     
@@ -113,3 +115,7 @@ def iam_get_text_block(form_id, data_root):
 def readtif(imname):
     im = Image.open(imname)
     return numpy.array( im.getdata(), numpy.uint8 ).reshape(im.size[1], im.size[0])
+
+def readcolim(imname):
+    im = Image.open(imname)
+    return numpy.array( im.getdata(), numpy.uint8).reshape(im.size[1], im.size[0],3)
