@@ -109,3 +109,7 @@ def iam_get_text_block(form_id, data_root):
                     form_right = max(left+width, form_right)
                  
     return form_left, form_top, form_right, form_bottom
+
+def readtif(imname):
+    im = Image.open(imname)
+    return numpy.array( im.getdata(), numpy.uint8 ).reshape(im.size[1], im.size[0])

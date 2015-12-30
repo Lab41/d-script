@@ -4,6 +4,8 @@ import io
 # !pip install pypng
 import png
 import numpy as np
+import PIL
+from IPython.display import Image, display
 
 def get_png_from_array(data):
     """
@@ -18,3 +20,10 @@ def get_png_from_array(data):
     w = png.Writer(*data.shape[::-1], greyscale=True)
     w.write(buf, data)
     return buf.getvalue()
+
+def display_img_array(ima):
+    im = PIL.Image.fromarray(ima)
+    bio = io.BytesIO()
+    im.convert('RGB')
+    im.save(bio, format='png')
+    display(Image(bio.getvalue(), format='png', retina=True))
