@@ -19,7 +19,8 @@ RUN cd /root && \
     wget https://pypi.python.org/packages/source/t/tornado/tornado-4.1.tar.gz && \
     gunzip tornado-4.1.tar.gz && tar -xvf tornado-4.1.tar && \
     cd tornado-4.1 && python setup.py install && \
-    pip install notebook 
+    pip install notebook && \
+    pip install pypng
 
 ADD bootstrap.sh /
 RUN chmod a+x bootstrap.sh

@@ -1,4 +1,8 @@
+import os
+import re
 import matplotlib.pylab as plt
+import PIL.Image as Image
+import numpy
 
 def viz_layer1( model ):
     
@@ -66,3 +70,52 @@ def partialnetwork(model, layernum):
     rmodel.compile(loss='mse', optimizer='adadelta')
     return rmodel
 
+
+def iam_get_text_block(form_id, data_root):
+    """Recover coordinates of the handwriting part of an IAM form
+    
+    Arguments:
+        form_id -- IAM form ID, XNN-NNNNN
+    
+        data_root -- path to the root of the IAM distribution (with forms,
+            lines, etc. folders and .txt files as its children)
+            
+    Returns:
+        the left, top, right, and bottom of a bounding box around the 
+        handwriting portion of the form denoted by form_id
+
+    """
+    forms_path_template = os.path.join(data_root, 'forms/{}.png')
+    lines_txt_path = os.path.join(data_root, 'lines.txt')
+    eight_space_re=re.compile(r'(([^s]+\s){7}).*')
+    form_left, form_top, form_right, form_bottom = None, None, None, None
+    with open(lines_txt_path, 'r') as lines_data:
+        for line_line in lines_data:
+            if line_line.startswith(form_id):
+                line_line_chopped = eight_space_re.sub('\\1', line_line).strip()
+                try:
+                    line_id, errcode, graylvl, num_components, left, top, width, height = line_line_chopped.split(' ')
+                except ValueError:
+                    # malformed line
+                    pass
+                left = int(left); top = int(top); width = int(width); height=int(height)
+                if form_top is None: # or top < form_top_left[1]:
+                    form_top = top
+                    form_left = left
+                    form_bottom = top+height
+                    form_right = left+width
+                else:
+                    form_top = min(top, form_top)
+                    form_left = min(left, form_left)                
+                    form_bottom = max(top+height, form_bottom)
+                    form_right = max(left+width, form_right)
+                 
+    return form_left, form_top, form_right, form_bottom
+
+def readtif(imname):
+    im = Image.open(imname)
+    return numpy.array( im.getdata(), numpy.uint8 ).reshape(im.size[1], im.size[0])
+
+def readcolim(imname):
+    im = Image.open(imname)
+    return numpy.array( im.getdata(), numpy.uint8).reshape(im.size[1], im.size[0],3)
