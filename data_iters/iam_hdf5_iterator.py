@@ -48,7 +48,7 @@ class IAM_MiniBatcher:
         output_arr[:slice_height,:slice_width] = original_line[y_slice, x_slice]
         return output_arr
 
-    def __init__(self, fname, num_authors, num_forms_per_author, default_mode=MiniBatcher.TRAIN, shingle_dim=(120,120), batch_size=32):
+    def __init__(self, fname, num_authors, num_forms_per_author, default_mode=MiniBatcher.TRAIN, shingle_dim=(120,120), batch_size=32, train_pct=.7, test_pct=.2, val_pct=.1):
         self.hdf5_file = fname
 
         fIn = h5py.File(self.hdf5_file, 'r')
@@ -82,7 +82,7 @@ class IAM_MiniBatcher:
         item_getter = lambda f, key: IAM_MiniBatcher.shingle_item_getter(f, key, shingle_dim)
         self.batch_size = batch_size
         m = MiniBatcher(fIn, keys,item_getter=item_getter, normalize=normalize,
-                        batch_size=self.batch_size, min_fragments=0)
+                        batch_size=self.batch_size, min_fragments=0, train_pct=train_pct, test_pct=test_pct, val_pct=val_pct)
         self.m = m
         self.default_mode = default_mode
 

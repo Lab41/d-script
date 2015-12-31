@@ -37,6 +37,8 @@ class MiniBatcher:
 
         self.normalize = normalize
 
+        if round(1e6*(train_pct + test_pct + val_pct))!= 1e6:
+            raise ValueError('Train(%f)+ Test(%f) + Validation(%f) set percentatages must add to 1.0' %(train_pct,test_pct,val_pct))
         self.train_pct = train_pct
         self.test_pct = test_pct
         self.val_pct = val_pct
