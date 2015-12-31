@@ -106,11 +106,28 @@ def fielnet( hdf5file, layer='softmax', compile=False ):
     model.add(Dense(128))
     model.add(BN())
     model.add(Activation('relu'))
+    if layer=='fc6':
+        f = h5py.File(hdf5file)
+        for k in range(18):
+            g = f['layer_{}'.format(k)]
+            weights = [g['param_{}'.format(p)] for p in range(g.attrs['nb_params'])]
+            model.layers[k].set_weights( weights )
+        f.close()
+        return model
+
     
     model.add(Dense(128))
     model.add(BN())
     model.add(Activation('relu'))
     #model.add(Dropout(0.5))
+    if layer=='fc7':
+        f = h5py.File(hdf5file)
+        for k in range(22):
+            g = f['layer_{}'.format(k)]
+            weights = [g['param_{}'.format(p)] for p in range(g.attrs['nb_params'])]
+            model.layers[k].set_weights( weights )
+        f.close()
+        return model
 
     model.add(Dense(num_authors))
 
