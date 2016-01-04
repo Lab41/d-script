@@ -1,0 +1,125 @@
+@charset "UTF-8";
+/* CSS Document */
+
+/*************************************** MAIN LAB41 STYLE ***************************************/
+
+/* Use this style sheet for lab41 branded specific styles. */
+
+/* !IMPORTS
+/* !GLOBALS
+/* --- !NAVIGATION
+/* !CUSTOM
+/* --- !ADJACENT MATRIX
+
+/******************************* !IMPORTS *******************************/
+@import url("main.css");
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,700,400italic);
+
+/******************************* !GLOBALS *******************************/
+
+body {
+    
+    font-family: "Open Sans", sans-serif;
+    
+}
+
+:hover {
+    
+    -webkit-transition: all ease 250ms;
+    -moz-transition: all ease 250ms;
+    -ms-transition: all ease 250ms;
+    -o-transition: all ease 250ms;
+    transition: all ease 250ms;
+    
+}
+
+/************************/
+/***** !NAVIGATION ******/
+/************************/
+
+nav.horizontal {
+    
+    align-content: space-between;
+    display: flex;
+    margin-bottom: 2em;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 2em;
+    min-width: 300px;
+    width: 70%;
+    
+}
+
+nav.horizontal a {
+    
+    background: #cbc5c5; /********************** COLOR */
+    height: 100%;
+    margin-right: 0.5em;
+    padding: 0.5em;
+    
+}
+
+nav.horizontal a:hover {
+    
+    background: #f4eeee; /********************** COLOR */
+    
+}
+
+nav.horizontal a:last-child {
+    
+    margin-right: 0;
+    
+}
+
+nav.vertical {
+    
+    max-width: 300px;
+    width: 20%;
+    
+}
+
+nav a.active {
+    
+    background: #06102f; /********************** COLOR */
+    color: #e6e0e0; /********************** COLOR */
+    
+}
+
+/******************************* !CUSTOM *******************************/
+
+/*****************************/
+/***** !ADJACENT MATRIX ******/
+/*****************************/
+
+/* canvas */
+adjacent-matrix svg {
+    
+    display: block;
+    
+}
+
+/* grid default color */
+adjacent-matrix rect {
+    
+    fill: #eeeeee; /********************** COLOR */
+    
+}
+
+/* viz title */
+adjacent-matrix p,
+sticky-nodes p,
+pie-chart p,
+venn-diagram p,
+.title-temp {
+    
+    font-weight: bold;
+    margin-bottom: 1em;
+    
+}
+
+/* grid line */
+adjacent-matrix line {
+    
+    stroke: rgb(212, 212, 212); /********************** COLOR */
+    
+}

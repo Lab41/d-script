@@ -1,0 +1,69 @@
+<h1>Exploratory Visualizations</h1>
+
+<section>
+    
+    <article>
+        
+        <p class="title-temp">Annotate Samples</p>
+        
+        <!-- ANNOTATION CANVAS -->
+        <label>Drawing tool:
+            <select id="dtool">
+                <option value="rect">Rectangle</option>
+                <option value="pencil">Pencil</option>
+            </select>
+        </label>
+
+        <div class="slider">
+
+            <!-- MEDIA -->
+            <div ng-repeat="slide in slides"
+                 class="slide slide-animation"
+                 ng-hide="!isCurrentSlideIndex($index);">
+
+                <div>
+
+                    <annotate-canvas></annotate-canvas>
+
+                </div>
+
+                <div>
+                    <h1>{{ slide.title }}</h1>
+                    <p>{{ slide.description }}</p>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- NAV ARROWS -->
+        <a class="arrow prev"
+           ng-click="next();">
+            <svg viewBox="0 0 100 58.5">
+                <use xlink:href="assets/arrow-line-2.svg#artwork"></use>
+            </svg>
+        </a>
+
+        <a class="arrow next"
+           ng-click="previous();">
+        <svg viewBox="0 0 100 58.5">
+                <use xlink:href="assets/arrow-line-2.svg#artwork"></use>
+            </svg>
+        </a>
+
+        <!-- NAV DOTS -->
+        <nav class="nav">
+            <div class="wrapper">
+                <ul class="dots">
+                    <li class="dot"
+                        ng-repeat="slide in slides">
+                        <a ng-class="{ 'active' : isCurrentSlideIndex($index) }"
+                           ng-click="setCurrentSlideIndex($index);">{{ $index }}</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        
+    </article>
+    
+</section>

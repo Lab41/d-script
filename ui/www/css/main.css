@@ -1,0 +1,34 @@
+@charset "UTF-8";
+/* CSS Document */
+
+/*************************************** MAIN LAB STYLE ***************************************/
+
+/* Use this style sheet for highest-level styling like font families and basic page layout. */
+
+/* !IMPORTS
+/* !GLOBALS
+/* !CUSTOM
+/* --- !something
+
+/******************************* !IMPORTS *******************************/
+@import url("reset.css");
+
+/******************************* !GLOBALS *******************************/
+
+html {
+    
+    font-size: 100%;
+    
+}
+
+main {
+    
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 2em;
+    min-width: 300px;
+    width: 70%;
+    
+}
+
+/******************************* !CUSTOM *******************************/

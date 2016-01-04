@@ -1,0 +1,272 @@
+@charset "UTF-8";
+/* CSS Document */
+
+/*************************************** dscript STYLE ***************************************/
+
+/* Use this style sheet for highest dscript specific styling. */
+
+/* !IMPORTS
+/* !GLOBALS
+/* !CUSTOM
+/* --- !something
+
+/******************************* !IMPORTS *******************************/
+@import url("lab41.css");
+@import url("lab41-light.css");
+
+/******************************* !GLOBALS *******************************/
+
+main {
+    
+    margin-top: 2em;
+    position: relative;
+    
+}
+
+canvas {
+    
+    display: block;
+    margin-top: 1em;
+    
+}
+
+section {
+    
+    margin-bottom: 1em;
+    margin-top: 1em;
+    
+}
+
+article {
+	
+	margin-bottom: 3em;
+	
+}
+
+/******************************* !CUSTOM *******************************/
+
+sticky-nodes .link {
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+sticky-nodes .node {
+  cursor: move;
+  fill: #ccc;
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+sticky-nodes .node.fixed {
+  fill: #f00;
+}
+
+#imageView {
+    
+    position: absolute;
+    
+}
+
+/******************/
+/**** VIZ TIPS ****/
+/******************/
+
+#viztips {
+    
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 900px;
+    width: 70%;
+    
+}
+
+#viztips button {
+    
+    border: 1px;
+    border-style: solid;
+    bottom: 2em;
+    left: 50%;
+    position: absolute;
+    
+    -webkit-transform: translateX(-50%);
+    -moz-transform: translateX(-50%);
+    -ms-transform: translateX(-50%);
+    -o-transform: translateX(-50%);
+    transform: translateX(-50%);
+    
+}
+
+.slider {
+    
+    height: 70vh;
+    overflow: hidden;
+    margin-bottom: 3em;
+    margin-top: 2em;
+    position: relative;
+    width: 100%;
+}
+
+.slide {
+    
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+.media-wrap img,
+.media-wrap video {
+    
+	bottom: 0;
+    height: auto;
+    left: 50%;
+    position: absolute;
+    
+    -webkit-transform: translateX(-50%);
+    -moz-transform: translateX(-50%);
+    -ms-transform: translateX(-50%);
+    -o-transform: translateX(-50%);
+    transform: translateX(-50%);
+    width: 100%;
+    
+}
+
+.media-wrap {
+    
+    height: 400px;
+    position: relative;
+    
+}
+
+.viz-text {
+    
+    position: absolute;
+    top: 420px;
+    
+}
+
+.arrow {
+    
+    fill: currentColor;
+    position: absolute;
+    z-index: 1002;
+    display: block;
+    top: 50%;
+    -webkit-transform: translateY(-50%);
+    -moz-transform: translateY(-50%);
+    -ms-transform: translateY(-50%);
+    -o-transform: translateY(-50%);
+    transform: translateY(-50%);
+    width: 2em;
+    height: 2em;
+    outline: none;
+    cursor: pointer;
+    opacity: 0.2;
+    transition: 0.2s linear all;
+    
+}
+
+.arrow.prev {
+    
+    left: 1em;
+    
+    -webkit-transform: rotate(-90deg);
+    -moz-transform: rotate(-90deg);
+    -ms-transform: rotate(-90deg);
+    -o-transform: rotate(-90deg);
+    transform: rotate(-90deg);
+    
+    
+}
+
+.arrow.next {
+    
+    right: 1em;
+    
+    -webkit-transform: rotate(90deg);
+    -moz-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+    -o-transform: rotate(90deg);
+    transform: rotate(90deg);
+    
+}
+
+.arrow.prev:hover {
+    opacity: 1;
+}
+
+.arrow.next:hover {
+    opacity: 1;
+}
+
+
+
+/*---------------------------------------------------------
+NAV
+---------------------------------------------------------*/
+
+.nav {
+    text-align: center;
+    display: block;
+    position: absolute;
+    z-index: 1002;
+    left: 0;
+    bottom: 5em;
+    right: 0;
+    height: 48px;
+}
+
+.nonDraggableImage{
+    -webkit-user-drag: none;
+}
+
+.nav .wrapper {
+    margin: 0 auto;
+    width: 100%;
+    padding: 1em 0 .8em;
+}
+
+.nav ul {
+    margin: 0;
+    width: 100%;
+}
+
+.nav .dot, .nav .dot a {
+    display: inline-block;
+}
+
+.dots .dot {
+    position: relative;
+    margin: 0 8px;
+    width: 12px;
+    height: 12px;
+}
+
+.dots .dot a {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 0.75em;
+    height: 0.75em;
+    text-indent: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    background: rgb(116, 116, 116);
+    border: 1px solid transparent;
+    outline: none;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    border-radius: 50%;
+    -webkit-transition: background-color 0.25s, border-color 0.25s;
+    -moz-transition: background-color 0.25s, border-color 0.25s;
+    transition: background-color 0.25s, border-color 0.25s;
+}
+
+.dots .dot a.active {
+    border-color: #FFF;
+    background-color: transparent;
+}
