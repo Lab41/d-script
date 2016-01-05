@@ -6,6 +6,8 @@ import numpy as np
 from collections import defaultdict, namedtuple
 from optparse import OptionParser
 
+import h5py
+import fielutil
 
 class StepShingler:
     
@@ -105,6 +107,31 @@ def shingles_4_inference(authors_fragments_set, hstep=90, vstep=90,
         if verbose:
             logging.getLogger(__name__).setLevel(old_level)
 
+class ICDARFeaturizer:
+    def __init__(self, icdar_hdf5_path, fiel_weights):
+        """ hdf5_path -- path to docid-only ICDAR13 set"""
+        self.fielnet = fielutil.fielnet(fiel_weights)
+        # vacuous compile, will not be trained
+        self.fielnet.compile(optimizer='sgd', loss='mse')
+        self.icdar_hdf5_path = icdar_hdf5_path
+
+    def fielify_doc_by_id(self, doc_id, return_mean=False):
+        with h5py.File(self.icdar_hdf5_path, "r") as icdar_hdf5:
+            print icdar_hdf5.keys()[:5]
+            img = icdar_hdf5[doc_id]
+            shingler = StepShingler(img, hstep=120, vstep=120)
+            all_features = []
+            for shingle in shingler:
+                shingle = np.expand_dims(np.expand_dims(shingle, 0),0)
+                #normalize
+                shingle = zero_one(shingle)
+                fiel_features = self.fielnet.predict(shingle)
+                all_features.append(fiel_features)
+            if return_mean:
+                all_features=np.mean(all_features, axis=0)
+            return all_features
+
+        
 
 def demo_shingles():
     # get an ICDAR image
