@@ -108,22 +108,31 @@ def shingles_4_inference(authors_fragments_set, hstep=90, vstep=90,
             logging.getLogger(__name__).setLevel(old_level)
 
 class ICDARFeaturizer:
+    """
+    Easy interface for featurizing documents in ICDAR13
+    """
     def __init__(self, icdar_hdf5_path, fiel_weights):
         """ hdf5_path -- path to docid-only ICDAR13 set"""
-        self.fielnet = fielutil.fielnet(fiel_weights)
+        self.fielnet = fielutil.fielnet(fiel_weights, layer='fc7')
         # vacuous compile, will not be trained
         self.fielnet.compile(optimizer='sgd', loss='mse')
         self.icdar_hdf5_path = icdar_hdf5_path
 
     def fielify_doc_by_id(self, doc_id, return_mean=False):
+        """ Get Fiel features for a document
+        
+        Arguments:
+            doc_id
+            return_mean -- Return features for all features (False) or do
+                mean aggregation?
+        """
         with h5py.File(self.icdar_hdf5_path, "r") as icdar_hdf5:
-            print icdar_hdf5.keys()[:5]
             img = icdar_hdf5[doc_id]
             shingler = StepShingler(img, hstep=120, vstep=120)
             all_features = []
             for shingle in shingler:
                 shingle = np.expand_dims(np.expand_dims(shingle, 0),0)
-                #normalize
+                # normalize
                 shingle = zero_one(shingle)
                 fiel_features = self.fielnet.predict(shingle)
                 all_features.append(fiel_features)
