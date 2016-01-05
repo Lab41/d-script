@@ -2,6 +2,8 @@ import json
 import web
 
 urls = (
+    "/rest/docs/compare/(icdar|iam)/(.*)", "compare_doc",
+    "/rest/docs/classify/(icdar|iam)/(.*)", "classify_doc",
     "/rest/data/(.*)", "viz_data",
     "/(.*)", "www",
     "/#(.*)", "index",
@@ -23,6 +25,45 @@ class index:
             return f.read()
         except IOError:
             web.notfound()
+
+class compare_doc:
+    """ Retrieve document with given ID, respond with
+    data on its similarity to other documents in the reference
+    corpus
+    """
+    def GET(self, corpus, doc_id):
+        try:
+            # retrieve data for given document
+            if corpus=="icdar":
+                doc_data = foo.get_doc_by_id(doc_id)
+                doc_features = foo.featurize(doc_data)
+                doc_neighbors, similarity_scores = foo.get_neighbors(doc_features)
+                
+                neighbors_hash = { 'neighbors'      : doc_neighbors,
+                                   'similarities'   : similarity_scores }
+                return neighbors_hash
+            elif corpus=="iam":
+                raise IOError
+        except:
+            web.notfound()
+
+class classify_doc:
+    """ Endpoint for getting data back from author identification pipeline.
+    Uses corpus name and document ID to retrieve query document, then
+    retrieves results of classifier pipeline, packs them up and sends them back.
+    """
+    def GET(self, corpus, doc_id):
+        try:
+            # retrieve data for given document
+            if corpus=="icdar":
+                doc_data = foo.get_doc_by_id(doc_id)
+                doc_features = foo.featurize(doc_data)
+                doc_authors, confidence_scores = foo.get_authors(doc_features)
+            elif corpus=="iam":
+                raise IOError
+        except:
+            web.notfound()
+
 
 class viz_data:
     def GET(self, name):
