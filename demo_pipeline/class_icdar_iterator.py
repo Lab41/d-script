@@ -50,7 +50,7 @@ class StepShingler:
         for row_i in xrange(0, self.img.shape[0] - self.shingle_size[0], self.vstep):
             for col_j in xrange(0, self.img.shape[1] - self.shingle_size[1], self.hstep):
                 logger = logging.getLogger(__name__)
-                logger.info("Row {0}, Col {1}".format(row_i, col_j))
+                #logger.info("Row {0}, Col {1}".format(row_i, col_j))
                 end_col = col_j + self.shingle_size[1]
                 end_row = row_i + self.shingle_size[0]
                 yield self.img[row_i:end_row, col_j:end_col]
@@ -118,13 +118,14 @@ class ICDARFeaturizer:
         self.fielnet.compile(optimizer='sgd', loss='mse')
         self.icdar_hdf5_path = icdar_hdf5_path
 
-    def fielify_doc_by_id(self, doc_id, return_mean=False):
+    def fielify_doc_by_id(self, doc_id, return_mean=False, stdev_threshold=None):
         """ Get Fiel features for a document
         
         Arguments:
             doc_id
             return_mean -- Return features for all features (False) or do
                 mean aggregation?
+            stdev_threshold -- shingle must have stdev > this to be counted
         """
         with h5py.File(self.icdar_hdf5_path, "r") as icdar_hdf5:
             img = icdar_hdf5[doc_id]
@@ -134,10 +135,19 @@ class ICDARFeaturizer:
                 shingle = np.expand_dims(np.expand_dims(shingle, 0),0)
                 # normalize
                 shingle = zero_one(shingle)
+                if stdev_threshold is not None and np.std(shingle) < stdev_threshold:
+                    continue
+                logger = logging.getLogger(__name__)
+                #logger.debug("Shingle Mean: {0}, St Dev: {1}".format(np.mean(shingle),
+                                                                       np.std(shingle)))
                 fiel_features = self.fielnet.predict(shingle)
+                #logger.debug("Features Mean: {0}, Variance: {1}".format(np.mean(fiel_features),
+                #                                                       np.var(fiel_features)))
                 all_features.append(fiel_features)
             if return_mean:
                 all_features=np.mean(all_features, axis=0)
+                #logger.debug("All features Mean: {0}, Variance: {1}".format(np.mean(all_features),
+                #                                                      np.var(all_features)))
             return all_features
 
         
