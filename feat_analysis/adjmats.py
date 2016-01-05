@@ -6,10 +6,11 @@ import matplotlib.pylab as plt
  Analyzing the features extracted by Pat to create an adjacency matrix
 '''
 
-origfile = '/data/fs4/datasets/icdar13/benchmarking-processed/author_icdar_be.hdf5'
-
-featfile = '/data/fs4/datasets/icdar13/benchmarking-processed/fiel_feat_icdar13.hdf5'
-# featfile = '/data/fs4/datasets/icdar13/benchmarking-processed/fiel_feat_icdar13_TH0.2.hdf5'
+datapath = '/fileserver'
+datapath = '/data/fs4/datasets'
+origfile = datapath+ '/icdar13/benchmarking-processed/author_icdar_be.hdf5'
+featfile = datapath+ '/icdar13/benchmarking-processed/fiel_feat_icdar13.hdf5'
+# featfile = datapath+ '/icdar13/benchmarking-processed/fiel_feat_icdar13_TH0.2.hdf5'
 
 feats = h5py.File(featfile,'r')
 origs = h5py.File(origfile,'r')
@@ -34,11 +35,11 @@ for auth in authsfrags:
 AAT = A.dot(A.T)
 FFT = F.dot(F.T)
 
-# Leave one out cross-validation with average author feature
+# Leave one out cross-validation with average author feature for top k authors
 diffa = np.zeros((1000,250))
 softkA = []
 nA = np.array( [ f / np.linalg.norm(f) for f in A ])
-k = 1
+k = 10
 for i, f in enumerate(F):
     nf = f / np.linalg.norm(f)
     # corra[i] = f.dot( nA.T )
@@ -46,3 +47,5 @@ for i, f in enumerate(F):
     topk = diffa[i].argsort()[:k]+1
     softkA.append( (i/4+1) in topk )
 numcorrectA = np.array(softkA).astype(int).sum()
+
+print "Percent in the top %d is %f" %( k, float(numcorrectA)/len(F)*100 )
