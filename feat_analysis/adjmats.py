@@ -24,7 +24,7 @@ A = np.zeros( (0, 128) )
 for auth in auths:
     a = auths[auth] / np.linalg.norm(auths[auth])
     A = np.concatenate( (A, a) )
-
+    
 # Matrix representation of all features
 F = np.zeros( (0, 128) )
 for auth in authsfrags:
@@ -33,10 +33,26 @@ for auth in authsfrags:
         F = np.concatenate( (F, f ) )
 
 # Adjacency matrices
-AAT = A.dot(A.T)
-FFT = F.dot(F.T)
+def adjmat( M ):
+    return M.dot(M.T)
+
+# Difference matrices
+def diffmat( A ):
+    diffA = np.zeros( (len(A), len(A)) )
+    for i,Ai in enumerate(A):
+        for j, Aj in enumerate(A):
+            diffA[i,j] = np.linalg.norm(A[i] - A[j])
+    return diffA
+            
+print "Computing adjacency matrices"
+AAT = adjmat( A )
+FFT = adjmat( F )
+print "Computing difference matrices"
+dA = diffmat( A )
+dF = diffmat( F )
 
 # Leave one out cross-validation with average author feature for top k authors
+print "Cross validation from feature to authors"
 diffa = np.zeros((1000,250))
 softkA = []
 k = 10
@@ -50,6 +66,7 @@ numcorrectA = np.array(softkA).astype(int).sum()
 print "Percent in the top %d is %f" %( k, float(numcorrectA)/len(F)*100 )
 
 # Greek or not?
+print "Discriminating Greek versus English"
 numcorrecteg=0
 for i, f in enumerate(F):
     diffeg = np.power( f - F, 2 ).sum(axis=1)
@@ -57,4 +74,6 @@ for i, f in enumerate(F):
     #         English                        Greek
     if (i%4 < 2 and topk[1]%4<2) or (i%4 >= 2 and topk[1]%4 >= 2):
         numcorrecteg+=1
+    else:
+        break
         
