@@ -55,3 +55,6 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# Ignore IPython notebook checkpoints
+.ipynb_checkpoints
