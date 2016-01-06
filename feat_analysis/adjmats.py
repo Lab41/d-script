@@ -1,6 +1,7 @@
 import h5py
 import numpy as np
 import matplotlib.pylab as plt
+import networkx
 
 '''
  Analyzing the features extracted by Pat to create an adjacency matrix
@@ -22,7 +23,7 @@ authsfrags = feats['fragments']
 A = np.zeros( (0, 128) )
 for auth in auths:
     a = auths[auth] / np.linalg.norm(auths[auth])
-    A = np.concatenate( (A, auths[auth]) )
+    A = np.concatenate( (A, a) )
 
 # Matrix representation of all features
 F = np.zeros( (0, 128) )
@@ -38,14 +39,22 @@ FFT = F.dot(F.T)
 # Leave one out cross-validation with average author feature for top k authors
 diffa = np.zeros((1000,250))
 softkA = []
-nA = np.array( [ f / np.linalg.norm(f) for f in A ])
 k = 10
 for i, f in enumerate(F):
     nf = f / np.linalg.norm(f)
     # corra[i] = f.dot( nA.T )
-    diffa[i] = np.power( nf - nA, 2 ).sum(axis=1)
+    diffa[i] = np.power( f - A, 2 ).sum(axis=1)
     topk = diffa[i].argsort()[:k]+1
     softkA.append( (i/4+1) in topk )
 numcorrectA = np.array(softkA).astype(int).sum()
-
 print "Percent in the top %d is %f" %( k, float(numcorrectA)/len(F)*100 )
+
+# Greek or not?
+numcorrecteg=0
+for i, f in enumerate(F):
+    diffeg = np.power( f - F, 2 ).sum(axis=1)
+    topk = diffeg.argsort()[:k]
+    #         English                        Greek
+    if (i%4 < 2 and topk[1]%4<2) or (i%4 >= 2 and topk[1]%4 >= 2):
+        numcorrecteg+=1
+        
