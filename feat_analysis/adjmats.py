@@ -37,12 +37,14 @@ def adjmat( M ):
     return M.dot(M.T)
 
 # Difference matrices
-def diffmat( A ):
-    diffA = np.zeros( (len(A), len(A)) )
+def diffmat( A, B=None ):
+    if not B:
+        B = A
+    diffmat = np.zeros( (len(A), len(B)) )
     for i,Ai in enumerate(A):
-        for j, Aj in enumerate(A):
-            diffA[i,j] = np.linalg.norm(A[i] - A[j])
-    return diffA
+        for j, Bj in enumerate(B):
+            diffmat[i,j] = np.linalg.norm(A[i] - B[j])
+    return diffmat
             
 print "Computing adjacency matrices"
 AAT = adjmat( A )
