@@ -117,6 +117,10 @@ class ICDARFeaturizer:
         # vacuous compile, will not be trained
         self.fielnet.compile(optimizer='sgd', loss='mse')
         self.icdar_hdf5_path = icdar_hdf5_path
+        
+    def fielify_img(self, img):
+        fiel_features = self.fielnet.predict(img)
+        return fiel_features
 
     def fielify_doc_by_id(self, doc_id, return_mean=False, stdev_threshold=None):
         """ Get Fiel features for a document
@@ -140,7 +144,7 @@ class ICDARFeaturizer:
                 logger = logging.getLogger(__name__)
                 #logger.debug("Shingle Mean: {0}, St Dev: {1}".format(np.mean(shingle),
                 #                                                       np.std(shingle)))
-                fiel_features = self.fielnet.predict(shingle)
+                fiel_features=self.fielify_img(shingle)
                 #logger.debug("Features Mean: {0}, Variance: {1}".format(np.mean(fiel_features),
                 #                                                       np.var(fiel_features)))
                 all_features.append(fiel_features)
@@ -153,10 +157,11 @@ class ICDARFeaturizer:
 
 def get_icdar_features(features_hdf5_path, 
                        icdar_docsonly_hdf5_path, icdar_authors_docs_hdf5_path,
-                       fielnet_weights_path="../convnets/fielnet/fielnet.hdf5"):
-    ic_feat = class_icdar_iterator.ICDARFeaturizer(icdar_docsonly_hdf5_path,
+                       fielnet_weights_path="../convnets/fielnet/fielnet.hdf5",
+                       threshold_value = None):
+    ic_feat = ICDARFeaturizer(icdar_docsonly_hdf5_path,
                                                    fielnet_weights_path)
-    threshold_value = 0.3
+    
 
     # featurize documents, authors
     with h5py.File(features_hdf5_path, "w") as fiel_feats:
