@@ -1,13 +1,16 @@
 import sys
 import h5py
 import json
+import operator
 import web
 
+
 sys.path.append("..")
+import feat_analysis.adjmats as adjmats
 
 urls = (
     # rest API backend endpoints
-    "/rest/similarity/(.*)", "similarity",
+    "/rest/similarity/(author|fragment)/(.*)", "similarity",
     "/rest/classification/(.*)", "classification",
     # front-end routes to load angular app
     "/(.*)", "www",
@@ -32,7 +35,7 @@ class index:
             web.notfound()
 
 class similarity:
-    def GET(self, item_id):
+    def GET(self, mode, item_id):
         
         # set up params
         i = web.input(item_id=None)
@@ -41,100 +44,51 @@ class similarity:
         # assemble list of nodes
         with h5py.File("www/icdar_distances.hdf5", "r") as f:
             # grab the fragment-to-fragment distance Dataset from f
-            dist_matrix = f['fragments']
-            for 
+            if mode == "fragment":
+                dist_matrix = f['fragments']['metrics']
+                # lookup and reverse lookup operations for fragments
+                get_full_id = adjmats.get_full_id
+                reverse_full_id = adjmats.reverse_full_id
+                get_author = adjmats.get_author
+            elif mode == "author":
+                dist_matrix = f['authors']['metrics']
+                # lookup and reverse lookup for authors
+                # is simpler, provided continuous & zero-based labeling
+                get_full_id = lambda x: "{0:03}".format(x)
+                # id retrieval is just an int cast 
+                reverse_full_id = int
 
-        
-        # dummy example of a request for doc with id "a"
-        a = {
-            # each node object will be rendered as a circle
-            # additional attributes can be added here
-            # to expose on the front end like labels, etc.
-            # there are no required attributes or naming requirements
-            "nodes": [
-                {
-                    "id": "a"
-                },
-                {
-                    "id": "b"
-                },
-                {
-                    "id": "c"
-                },
-                {
-                    "id": "d"
-                }
-            ],
-            # each link object will be rendered as a line between circles
-            # each object must have a key named "source" and one named "target"
-            # the source value by default goes by index of the above nodes array
-            # but if you want to use the id instead to connect that can work
-            # additional attributes can be added to expose on the front end like
-            # value could be used to spatially lay out nodes so smaller the value
-            # the closer spatially the source and target are in the viz
-            "links": [
-                {
-                    "source": 0,
-                    "target": 1,
-                    "value": 5
-                },
-                {
-                    "source": 1,
-                    "target": 2,
-                    "value": 1.2
-                }
-            ]
-        }
-        
-        # dummy example of a request for author with id "b"
-        b = {
-            # additional attributes can be added here
-            # to expose on the front end like labels, etc.
-            # there are no required attributes or naming requirements
-            "nodes": [
-                {
-                    "id": "b"
-                },
-                {
-                    "id": "x"
-                },
-                {
-                    "id": "y"
-                },
-                {
-                    "id": "z"
-                }
-            ],
-            # each link object will be rendered as a transparent line between circle groups
-            # each object must have a key named "source" and one named "target"
-            # the source value by default goes by index of the above nodes array
-            # but if you want to use the id instead to connect that can work
-            # additional attributes can be added to expose on the front end like
-            # value could be used to spatially lay out node groups so smaller the value
-            # the closer spatially the source and target are in the viz
-            "links": [
-                {
-                    "source": 0,
-                    "target": 1,
-                    "value": 5
-                },
-                {
-                    "source": 1,
-                    "target": 2,
-                    "value": 1.2
-                }
-            ]
-        }
-        
-        # use dictionary to return data when param matches
-        def getData(item_id):
-            return {
-                'a': a,
-                'b': b
-            }[item_id]
-        
+            nodes = [] 
+            for i in xrange(dist_matrix.shape[0]):
+                nodes.append({"id": get_full_id(i)})
+            
+            # if we are doing a query on an item, also retrieve the K nearest neighbors
+            # and create link objects for those
+            links = []
+            if item_id is not None and item_id != "":
+                item_index = adjmats.reverse_full_id(item_id)
+                num_nearest = 5
+                nearest_indices = np.argsort(dist_matrix[item_index,:])[:num_nearest]
+                #TODO: could also get links between neighbors?
+                if mode=='fragment':
+                    # mark nodes from same author
+                    self_author = int(get_author(item_index))
+                    self_author_node_indices = range(self_author*4, 4)
+                    for i in self_author_node_indices:
+                        nodes[i]['same_author'] = True
+                    
+                    
+                for neighbor_index in nearest_indices:
+                    neighbor_distance = dist_matrix[item_index, neighbor_index]
+                    links.append({
+                        "source": item_index,
+                        "dest": neighbor_index,
+                        "value": neighbor_distance
+                    })
+            response = { "nodes": nodes, "links": links }
+
         # return data object
-        return json.dumps(getData(item_id))
+        return json.dumps(response)
     
 class classification:
     def GET(self, doc_id):
@@ -143,69 +97,34 @@ class classification:
         i = web.input(doc_id=None)
         params = web.input()
 
-        # dummy example of a request for doc with id "a"
-        a = {
-            "id": "a",
-            # no required attributes or naming requirements
-            # value could be confidence
-            # ideally the best match would be the first object in the array
-            "author": [
-                {
-                    "id": "x",
-                    "name": "author1",
-                    "value": 5
-                },
-                {
-                    "id": "x",
-                    "name": "author2",
-                    "value": 4.3
-                },
-                {
-                    "id": "x",
-                    "name": "author3",
-                    "value": 4.2
-                },
-                {
-                    "id": "x",
-                    "name": "author4",
-                    "value": 1
-                },
-                {
-                    "id": "x",
-                    "name": "author5",
-                    "value": 0.8
-                }
-            ],
-            # no required attributes or naming requirements
-            # value could be the relatedness value in the entire feature set for this doc
-            "features": [
-                {
-                    "id": "x",
-                    "name": "feature1",
-                    "value": 10
-                },
-                {
-                    "id": "x",
-                    "name": "feature2",
-                    "value": 3
-                },
-                {
-                    "id": "x",
-                    "name": "feature3",
-                    "value": 7.4
-                }
-            ]
-        }
-                
-        # use dictionary to return data when param matches
-        def getData(doc_id):
-            return {
-                'a': a
-            }[doc_id]
-        
+
+        # retrieve features for document
+        hstep = 20
+        vstep = 20
+        stdev_threshold=0.2
+        num_shingles=100
+        doc_feats = class_icdar_iterator.fielify_doc_by_id(doc_id, return_mean=False,
+            hstep=hstep, vstep=vstep, stdev_threshold=stdev_threshold, 
+            num_shingles=num_shingles)
+        # run classifier
+        author_probs = foo.get_author_probabilities(doc_feats)
+        # get correct author
+        correct_author = foo.lookup_author(doc_id)
+
+        # get top K authors
+        num_authors = 5
+        author_limit = min(num_authors, len(author_probs))
+        probability_cutoff = np.sort([ -prob for prob in author_probs.itervalues() ])[num_authors]
+        authors_list = [ {"id": author, "value": prob} for author, prob in author_probs.iteritems() 
+            if prob > probability_cutoff ]
+        authors_list = sorted(authors_list, key=operator.itemgetter("value"), reverse=True)
+        result = {
+            "id": doc_id,
+            "author_id" : correct_author,
+            "authors": authors_list }
         
         # return data object
-        return json.dumps(getData(doc_id))
+        return json.dumps(result)
     
 app = web.application(urls, globals())
     
