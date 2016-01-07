@@ -78,4 +78,7 @@ for i, f in enumerate(F):
         numcorrecteg+=1
     else:
         break
-        
+       
+# G = networkx.from_numpy_matrix(FFT) 
+# networkx.draw(G)
+# plt.show()
