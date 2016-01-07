@@ -7,9 +7,7 @@ import networkx
  Analyzing the features extracted by Pat to create an adjacency matrix
 '''
 
-def get_features():
-    datapath = '/fileserver'
-    datapath = '/data/fs4/datasets'
+def get_features(datapath):
     origfile = datapath+ '/icdar13/benchmarking-processed/author_icdar_be.hdf5'
     featfile = datapath+ '/icdar13/benchmarking-processed/fiel_feat_icdar13.hdf5'
     # featfile = datapath+ '/icdar13/benchmarking-processed/fiel_feat_icdar13_TH0.2.hdf5'
@@ -70,7 +68,7 @@ def diffmat( A, B=None ):
             diffmat[i,j] = np.linalg.norm(A[i] - B[j])
     return diffmat
            
-def demo(): 
+def demo(A,F): 
     print "Computing adjacency matrices"
     AAT = adjmat( A )
     FFT = adjmat( F )
