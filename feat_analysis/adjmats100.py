@@ -9,15 +9,9 @@ import networkx
 
 datapath = '/fileserver'
 datapath = '/data/fs4/datasets'
-origfile = datapath+ '/icdar13/benchmarking-processed/author_icdar_be.hdf5'
-featfile = datapath+ '/icdar13/benchmarking-processed/fiel_feat_icdar13.hdf5'
-# featfile = datapath+ '/icdar13/benchmarking-processed/fiel_feat_icdar13_TH0.2.hdf5'
 featfile = datapath+'/icdar13/benchmarking-processed/fiel_feat_icdar13_100shingles.hdf5'
 
 feats = h5py.File(featfile,'r')
-origs = h5py.File(origfile,'r')
-
-auths = feats['authors']
 authsfrags = feats['fragments']
     
 # Matrix representation of all features
@@ -34,8 +28,10 @@ for i, auth in enumerate(authsfrags):
     A = np.concatenate( (A, fg/4.0) )
 
 # Adjacency matrices
-def adjmat( M ):
-    return M.dot(M.T)
+def adjmat( A, B=None ):
+    if B == None:
+        B=A
+    return A.dot(B.T)
 
 # Difference matrices
 def diffmat( A, B=None ):
@@ -47,38 +43,42 @@ def diffmat( A, B=None ):
             diffmat[i,j] = np.linalg.norm(A[i] - B[j])
     return diffmat
             
-print "Computing adjacency matrices"
-AAT = adjmat( A )
+# Compute adjacency matrices
+AFT = adjmat( F, A )
 FFT = adjmat( F )
-print "Computing difference matrices"
-dA = diffmat( A )
-dF = diffmat( F )
 
-# Leave one out cross-validation with average author feature for top k authors
-print "Cross validation from feature to authors"
-diffa = np.zeros((1000,250))
-softkA = []
-k = 1
-for i, f in enumerate(F):
-    nf = f / np.linalg.norm(f)
-    # corra[i] = f.dot( nA.T )
-    diffa[i] = np.power( f - A, 2 ).sum(axis=1)
-    topk = diffa[i].argsort()[:k]+1
-    softkA.append( (i/4+1) in topk )
-numcorrectA = np.array(softkA).astype(int).sum()
-print "Percent in the top %d is %f" %( k, float(numcorrectA)/len(F)*100 )
+# Do the nearest neighbor
+np.fill_diagonal( FFT, 0 )  # don't cheat!
+FFT = FFT.argsort(axis=1)/4+1 
+AFT = AFT.argsort(axis=1)+1
 
-# Greek or not?
-print "Discriminating Greek versus English"
-numcorrecteg=0
-for i, f in enumerate(F):
-    diffeg = np.power( f - F, 2 ).sum(axis=1)
-    topk = diffeg.argsort()[:k]
-    #         English                        Greek
-    if (i%4 < 2 and topk[1]%4<2) or (i%4 >= 2 and topk[1]%4 >= 2):
-        numcorrecteg+=1
+# Top k for nearest neighbor
+k = 3
+softA = 0.0
+softF = 0.0
+hardA = 0.0
+hardF = 0.0
+for i in xrange(len(AFT)):
+    # Soft criterion if query is in top k
+    if (i/4+1) in FFT[i,-k:]:
+        softF += 1
+    if (i/4+1) in AFT[i,-k:]:
+        softA += 1
+    # Hard criterion determining how many returned are correct
+    for j in xrange(3):
+        if i/4+1 == FFT[i,-j-1]:
+            hardF += 1
+        if i/4+1 == AFT[i,-j-1]:
+            hardA += 1
 
-       
-# G = networkx.from_numpy_matrix(FFT) 
-# networkx.draw(G)
-# plt.show()
+softA /= 1000
+softF /= 1000
+hardA /= 3000
+hardF /= 3000
+
+print "P/R & S/H results for top %d are: " %k
+print "softavg=%f%%, softnn=%f%%, hardavg=%f%%, hardnn=%f%%" %(softA, softF, hardA, hardF)
+
+
+
+
