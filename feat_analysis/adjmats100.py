@@ -53,7 +53,7 @@ FFT = FFT.argsort(axis=1)/4+1
 AFT = AFT.argsort(axis=1)+1
 
 # Top k for nearest neighbor
-k = 3
+k = 5
 softA = 0.0
 softF = 0.0
 hardA = 0.0
