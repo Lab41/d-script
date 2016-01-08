@@ -6,7 +6,6 @@ import web
 
 
 sys.path.append("..")
-import feat_analysis.adjmats as adjmats
 
 urls = (
     # rest API backend endpoints
@@ -17,7 +16,26 @@ urls = (
     "/#(.*)", "index",
     "/", "index"
 )
-    
+
+
+def get_author_id(i):
+    author_id = 1 + (i / 4)
+    return author_id
+
+def get_fragment_id(i):
+    file_id = 1 + (i % 4)
+    return file_id
+
+def get_full_id(i):
+    full_id = "{0:03}_{1}".format(get_author_id(i), get_fragment_id(i))
+    return full_id
+
+def reverse_full_id(full_id):
+    author_id, file_id = full_id.split(".")[0].split("_")
+    author_int = int(author_id)
+    file_int = int(file_id)
+    return 4*(author_int - 1) + (file_int - 1)
+
 class www:
     def GET(self, filename):
         try:
@@ -42,34 +60,33 @@ class similarity:
         params = web.input()
 
         # assemble list of nodes
-        with h5py.File("www/icdar_distances.hdf5", "r") as f:
-            # grab the fragment-to-fragment distance Dataset from f
-            if mode == "fragment":
-                dist_matrix = f['fragments']['metrics']
-                # lookup and reverse lookup operations for fragments
-                get_full_id = adjmats.get_full_id
-                reverse_full_id = adjmats.reverse_full_id
-                get_author = adjmats.get_author
-            elif mode == "author":
-                dist_matrix = f['authors']['metrics']
-                # lookup and reverse lookup for authors
-                # is simpler, provided continuous & zero-based labeling
-                get_full_id = lambda x: "{0:03}".format(x)
-                # id retrieval is just an int cast 
-                reverse_full_id = int
+        # grab the fragment-to-fragment distance Dataset from f
+        if mode == "fragment":
+            with h5py.File("data/icdar_fragments_distances.hdf5", "r") as f:
+                dist_matrix = f['metrics'].value
+        elif mode == "author":
+            with h5py.File("data/icdar_authors_distances.hdf5", "r") as f:
+                dist_matrix = f['metrics'].value
+            # ID lookup and reverse lookup for authors
+            # are simpler, provided continuous & zero-based labeling
+            get_full_id = lambda x: "{0:03}".format(x+1)
+            reverse_full_id = lambda x: int(x) - 1
 
             nodes = [] 
             for i in xrange(dist_matrix.shape[0]):
-                nodes.append({"id": get_full_id(i)})
+                node_full_id = get_full_id(i)
+                nodes.append({"id": node_full_id})
             
             # if we are doing a query on an item, also retrieve the K nearest neighbors
             # and create link objects for those
             links = []
             if item_id is not None and item_id != "":
-                item_index = adjmats.reverse_full_id(item_id)
+                item_index = reverse_full_id(item_id)
                 num_nearest = 5
                 nearest_indices = np.argsort(dist_matrix[item_index,:])[:num_nearest]
-                #TODO: could also get links between neighbors?
+                cutoff_distance = dist_matrix[item_index,nearest_indices[num_nearest]]
+                
+                # make node objects
                 if mode=='fragment':
                     # mark nodes from same author
                     self_author = int(get_author(item_index))
@@ -77,14 +94,24 @@ class similarity:
                     for i in self_author_node_indices:
                         nodes[i]['same_author'] = True
                     
-                    
+                # make link objects    
                 for neighbor_index in nearest_indices:
+                    # add edges to query node
                     neighbor_distance = dist_matrix[item_index, neighbor_index]
                     links.append({
                         "source": item_index,
-                        "dest": neighbor_index,
+                        "target": neighbor_index,
                         "value": neighbor_distance
                     })
+                    # add edges between successive neighbors if close enough
+                    for neighbor_2_index in nearest_indices:
+                        neighbor_distance = dist_matrix[neighbor_index, neighbor_2_index]
+                        if neighbor_distance < cutoff_distance:
+                            links.append({
+                                "source": neighbor_index,
+                                "target": neighbor_2_index,
+                                "value": neighbor_distance
+                            })
             response = { "nodes": nodes, "links": links }
 
         # return data object
@@ -97,30 +124,33 @@ class classification:
         i = web.input(doc_id=None)
         params = web.input()
 
+        feats_path = "data/fiel_feat_icdar13_100shingles.hdf5"
+        model_path = None
 
-        # retrieve features for document
-        hstep = 20
-        vstep = 20
-        stdev_threshold=0.2
-        num_shingles=100
-        doc_feats = class_icdar_iterator.fielify_doc_by_id(doc_id, return_mean=False,
-            hstep=hstep, vstep=vstep, stdev_threshold=stdev_threshold, 
-            num_shingles=num_shingles)
+        # get correct author (HACK)
+        correct_author_id = doc_id.split("_")[0]
+
+        # retrieve features (a lookup, for now)
+        with h5py.File(feats_path) as f:
+            doc_feats = f[correct_author_id][doc_id + ".tif"].value
+            # take mean over shingles
+            doc_feats = np.mean(doc_feats, axis=0)
+        
         # run classifier
-        author_probs = foo.get_author_probabilities(doc_feats)
-        # get correct author
-        correct_author = foo.lookup_author(doc_id)
-
+        author_probs = foo.authorProbs(model_path, doc_feats)
+        
         # get top K authors
         num_authors = 5
         author_limit = min(num_authors, len(author_probs))
-        probability_cutoff = np.sort([ -prob for prob in author_probs.itervalues() ])[num_authors]
+        probability_cutoff = np.sort([-prob for prob in author_probs.itervalues()])[num_authors]
         authors_list = [ {"id": author, "value": prob} for author, prob in author_probs.iteritems() 
             if prob > probability_cutoff ]
+        
+        # sort by probability
         authors_list = sorted(authors_list, key=operator.itemgetter("value"), reverse=True)
         result = {
             "id": doc_id,
-            "author_id" : correct_author,
+            "author_id" : correct_author_id,
             "authors": authors_list }
         
         # return data object
