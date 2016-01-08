@@ -23,6 +23,13 @@ body {
     
 }
 
+button[disabled="disabled"],
+button[disabled="disabled"]:hover {
+    
+    opacity: 0.2;
+    
+}
+
 :hover {
     
     -webkit-transition: all ease 250ms;
@@ -110,6 +117,7 @@ adjacent-matrix p,
 sticky-nodes p,
 pie-chart p,
 venn-diagram p,
+stacked-bar-chart p,
 .title-temp {
     
     font-weight: bold;

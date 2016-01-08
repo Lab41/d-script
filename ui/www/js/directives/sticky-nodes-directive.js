@@ -19,17 +19,19 @@ angular.module("sticky-nodes-directive", [])
                 // if not attributes present - use default
 				var width = parseInt(attrs.canvasWidth) || 700;
                 var height = parseInt(attrs.canvasHeight) || width;
-                var radius = 5;
+                var radius = 2;
+                var diameter = radius * 2;
 				var color = ["orange", "teal", "grey", "#5ba819"];
 				
 				var force = d3.layout.force()
-					.size([width, height])
-					.charge(-400)
-					.linkDistance(40)
-					.on("tick", tick);
+					.charge(-10)
+                    .linkDistance(20)
+					//.linkDistance(function(d) { return d.value; })
+                    .size([(width - diameter), (height - diameter)])
+					//.on("tick", tick);
 
-				var drag = force.drag()
-					.on("dragstart", dragstart);
+				/*var drag = force.drag()
+					.on("dragstart", dragstart);*/
 
                 // create svg canvas
                 var canvas = d3.select(element[0])
@@ -38,17 +40,17 @@ angular.module("sticky-nodes-directive", [])
                         viewBox: "0 0 " + width + " " + height
                     });
 				
-				var link = canvas.selectAll(".link");
-    			var node = canvas.selectAll(".node");
+				//var link = canvas.selectAll(".link");
+    			//var node = canvas.selectAll(".node");
                 
                 // bind data
                 scope.$watch("vizData", function(newData, oldData) {
-                    //console.log("--------------------- watch triggered ---------------------");
+                    console.log("--------------------- watch triggered ---------------------");
                     //console.log("------- old data -------"); console.log(oldData);
                     //console.log("------- new data -------"); console.log(newData);
     
                     // async check
-                    //if (newData !== undefined) {
+                    if (newData !== undefined) {
                         //console.log("data is ready");
 						
 						// check new vs old
@@ -64,34 +66,124 @@ angular.module("sticky-nodes-directive", [])
                         
                         function draw(data) {
 
+                            // set layout data
 							force
 							  .nodes(data.nodes)
 							  .links(data.links)
 							  .start();
 
-						  link = link.data(data.links)
+						  /*link = link.data(data.links)
 							.enter().append("line")
 							  .attr("class", "link");
+                            
+                            node = node.data(force.nodes());
+                          
+                            
+                            node.enter().append("circle").attr("class", function(d) { return "node " + d.id; }).attr("r", radius);
+                          
+                            // events
+                            node.on({
+                                click: function(d) {
+                                    
+                                    // show features
+                                    d3.selectAll(".feature")
+                                        .style({
+                                            opacity: function(d) { return (d[0].value / 10); },
+                                            fill: function(d, i) { return d[0].value > 9 ? "#e9f55c" : "currentColor"; }
+                                        });
+                                }
+                            })
+                            
+                            node.exit().remove();*/
+                            
+                            var link = canvas
+                                .selectAll(".link")
+                                .data(data.links)
+                                .enter()
+                                .append("line")
+                                .attr({
+                                    class: "link"
+                                })
+                            
+                            var node = canvas
+                                .selectAll(".node")
+                                .data(data.nodes)
+                                .enter()
+                                .append("circle")
+                                .attr({
+                                    class: "node",
+                                    r: radius
+                                })
+                            
+                            // events
+                            node
+                                .on({
+                                click: function() {
+                                    
+                                    // make node active
+                                    // figure out how to make element work with SVG
+                                    //angular.element(this).toggleClass = "active";
+                                    
+                                    var isActive = d3.select(this).attr("class") == "node active" ? true : false;
+                                    
+                                    // check class
+                                    if (isActive) {
+                                        
+                                        // make inactive
+                                        d3.select(this)
+                                            .attr({
+                                                class: "node"
+                                            });
+                                        
+                                    } else {
+                                        
+                                        // make active
+                                        d3.select(this)
+                                            .attr({
+                                                class: "node active"
+                                            });
+                                        
+                                    };
+                                    
+                                    // get attribute data for individual node
+                                    dataService.getData("classification", "a").then(function(data) {
+                                        
+                                        var vizScope = scope.$parent;
+                        
+                                        // assign to scope
+                                        vizScope.details = vizScope.details.concat(data);
 
-						  node = node.data(data.nodes)
-							.enter().append("circle")
-							  .attr("class", "node")
-							  .attr("r", 12)
-						  		.style("fill", function(d, i) { return color[d.group]; })
-							  .on("dblclick", dblclick)
-							  .call(drag);
+                                    });
+                                                                        
+                                }
+                            })
+                                //.call(force.drag);
+                            
+                            force
+                                .on("tick", function() {
+                                
+                                link.attr("x1", function(d) { return d.source.x; })
+                                    .attr("y1", function(d) { return d.source.y; })
+                                    .attr("x2", function(d) { return d.target.x; })
+                                    .attr("y2", function(d) { return d.target.y; });
+                                        
+                                        node.attr("cx", function(d) { return d.x; })
+                                            .attr("cy", function(d) { return d.y; });
+                                        
+                                    }
+                                )
 							
                         };
                         
-                    //};
+                    };
                     
                 });
 				
-				function tick() {
+				/*function tick() {
 				  link.attr("x1", function(d) { return d.source.x; })
 					  .attr("y1", function(d) { return d.source.y; })
-					  .attr("x2", function(d) { return d.target.x; })
-					  .attr("y2", function(d) { return d.target.y; });
+					  .attr("x2", function(d) { return d.dest.x; })
+					  .attr("y2", function(d) { return d.dest.y; });
 
 				  node.attr("cx", function(d) { return d.x; })
 					  .attr("cy", function(d) { return d.y; });
@@ -103,7 +195,7 @@ angular.module("sticky-nodes-directive", [])
 
 				function dragstart(d) {
 				  d3.select(this).classed("fixed", d.fixed = true);
-				}
+				}*/
 				
 			});
 			

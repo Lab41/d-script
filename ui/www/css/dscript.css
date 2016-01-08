@@ -18,8 +18,16 @@
 
 main {
     
-    margin-top: 2em;
+    margin-top: 3em;
     position: relative;
+    
+}
+
+/* state title */
+main > h1 {
+    
+    font-size: 3em;
+    margin-bottom: 1em;
     
 }
 
@@ -32,8 +40,17 @@ canvas {
 
 section {
     
-    margin-bottom: 1em;
+    display: flex;
+    margin-bottom: 10em;
     margin-top: 1em;
+    /*position: relative;*/
+    
+}
+
+section h1 {
+    
+    font-size: 2em;
+    margin-bottom: 0.5em;
     
 }
 
@@ -43,56 +60,75 @@ article {
 	
 }
 
+/* main sections */
+section div {
+    
+    position: relative;
+    width: 100%;
+    
+}
+
 /******************************* !CUSTOM *******************************/
 
+.active {
+    
+    fill: teal !important;
+    
+}
+
+.tool-tip {
+    
+    min-height: 30px;
+    min-width: 300px;
+    padding: 1em;
+    position: absolute;
+    
+}
+
 sticky-nodes .link {
-  stroke: #000;
-  stroke-width: 1.5px;
+    
+    opacity: 0.25;
+  stroke: currentColor;
+  stroke-width: 0.5px;
+    stroke-linecap: round;
 }
 
 sticky-nodes .node {
-  cursor: move;
-  fill: #ccc;
-  stroke: #000;
-  stroke-width: 1.5px;
+    
+  cursor: pointer;
+  fill: currentColor;
 }
 
 sticky-nodes .node.fixed {
-  fill: #f00;
+  fill: teal;
+}
+
+/* svg position on slide */
+.slide stacked-bar-chart svg {
+    
+    position: relative;
+    top: -3px;
+    
+}
+
+/* bar slice */
+stacked-bar-chart .feature {
+    
+    cursor: pointer;
+    
+}
+
+/* label */
+stacked-bar-chart .label {
+    
+    font-size: 0.5em;
+    text-anchor: middle;
+    
 }
 
 #imageView {
     
     position: absolute;
-    
-}
-
-/******************/
-/**** VIZ TIPS ****/
-/******************/
-
-#viztips {
-    
-    margin-left: auto;
-    margin-right: auto;
-    max-width: 900px;
-    width: 70%;
-    
-}
-
-#viztips button {
-    
-    border: 1px;
-    border-style: solid;
-    bottom: 2em;
-    left: 50%;
-    position: absolute;
-    
-    -webkit-transform: translateX(-50%);
-    -moz-transform: translateX(-50%);
-    -ms-transform: translateX(-50%);
-    -o-transform: translateX(-50%);
-    transform: translateX(-50%);
     
 }
 
@@ -113,6 +149,12 @@ sticky-nodes .node.fixed {
     top: 0;
     left: 0;
     width: 100%;
+    
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: 100%;
+
 }
 
 .media-wrap img,
