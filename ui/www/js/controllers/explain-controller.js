@@ -108,7 +108,7 @@ angular.module("explain-controller", [])
     /*******************************/
     
     // get data
-	getDocs("similarity", "d");
+	getDocs("similarity", "f");
     
 	function getDocs(endpoint, id) {
 		dataService.getData(endpoint, id).then(function(data) {

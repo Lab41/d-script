@@ -25,7 +25,7 @@
             <div ng-repeat="detail in details"
                  class="slide slide-animation"
                  ng-hide="!isCurrentSlideIndex($index);"
-                 style="background-image: url('{{ detail.img }}')">
+                 style="background-image: url('{{ 'data/benchmarking/' + detail.id + '.png' }}')">
                 
                 <!-- STACKED BAR -->
                 <stacked-bar-chart viz-data="detail.features"
