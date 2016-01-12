@@ -68,11 +68,23 @@ section div {
     
 }
 
+canvas {
+    
+    cursor: pointer;
+    
+}
+
 /******************************* !CUSTOM *******************************/
 
 .active {
     
     fill: teal !important;
+    
+}
+
+nav a.active {
+    
+    color: currentColor;
     
 }
 
@@ -82,6 +94,15 @@ section div {
     min-width: 300px;
     padding: 1em;
     position: absolute;
+    
+}
+
+/* dummy docs holder */
+sticky-nodes svg {
+    
+    pointer-events: none;
+    position: absolute;
+    z-index: 9999;
     
 }
 
@@ -95,8 +116,8 @@ sticky-nodes .link {
 
 sticky-nodes .node {
     
-  cursor: pointer;
-  fill: currentColor;
+  pointer-events: none;
+  fill: trasnparent;
 }
 
 sticky-nodes .node.fixed {
@@ -134,7 +155,7 @@ stacked-bar-chart .label {
 
 .slider {
     
-    height: 70vh;
+    height: 500px;
     overflow: hidden;
     margin-bottom: 3em;
     margin-top: 2em;
@@ -144,48 +165,19 @@ stacked-bar-chart .label {
 
 .slide {
     
-    height: 100%;
+    /*height: 100%;*/
     position: absolute;
-    top: 0;
+    top: 50%;
+    transform: translateY(-50%);
     left: 0;
-    width: 100%;
+    width: auto;
+    /*width: 100%;
     
-    background-position: 50% 50%;
+    /*background-position: 50% 50%;
     background-repeat: no-repeat;
     background-size: cover;
-    height: 100%;
+    height: 100%;*/
 
-}
-
-.media-wrap img,
-.media-wrap video {
-    
-	bottom: 0;
-    height: auto;
-    left: 50%;
-    position: absolute;
-    
-    -webkit-transform: translateX(-50%);
-    -moz-transform: translateX(-50%);
-    -ms-transform: translateX(-50%);
-    -o-transform: translateX(-50%);
-    transform: translateX(-50%);
-    width: 100%;
-    
-}
-
-.media-wrap {
-    
-    height: 400px;
-    position: relative;
-    
-}
-
-.viz-text {
-    
-    position: absolute;
-    top: 420px;
-    
 }
 
 .arrow {
@@ -204,7 +196,7 @@ stacked-bar-chart .label {
     height: 2em;
     outline: none;
     cursor: pointer;
-    opacity: 0.2;
+    opacity: 0;
     transition: 0.2s linear all;
     
 }
@@ -294,8 +286,8 @@ NAV
     text-indent: 100%;
     white-space: nowrap;
     overflow: hidden;
-    background: rgb(116, 116, 116);
-    border: 1px solid transparent;
+    background: transparent;
+    border: 1px solid currentColor;
     outline: none;
     -webkit-box-shadow: none;
     -moz-box-shadow: none;
@@ -309,6 +301,6 @@ NAV
 }
 
 .dots .dot a.active {
-    border-color: #FFF;
-    background-color: transparent;
+    border-color: currentColor;
+    background-color: currentColor;
 }

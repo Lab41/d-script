@@ -11,7 +11,11 @@ angular.module("explain-controller", [])
     
 	$scope.allNodes;
     $scope.nodes;
+    $scope.docNodes;
+    $scope.allDocNodes;
     $scope.offset = 0; // starting point
+    
+    $scope.layout = "stack";
     
     /****************************/
     /********* !EVENTS **********/
@@ -41,14 +45,14 @@ angular.module("explain-controller", [])
         
         // add dummy node
         // might be API call?
-        var allNodes = $scope.nodes.nodes;
+       /* var allNodes = $scope.docNodes.nodes;
         var links = $scope.nodes.links;
         var newNodes = allNodes.concat({"id": "new"});
         
         var obj = {nodes: newNodes, links: links};
         
         // add to scope to trigger viz change
-        $scope.nodes = obj;
+        $scope.nodes = obj;*/
         
     };
     
@@ -103,14 +107,26 @@ angular.module("explain-controller", [])
        
     };
     
+    $scope.toggleLayout = function(current) {
+        
+        var layout = current;
+        
+        if (layout == "stack") {
+            console.log(this);
+            
+        }
+        
+    }
+    
     /*******************************/
     /********* !FUNCTIONS **********/
     /*******************************/
     
     // get data
-	getDocs("similarity", "f");
+    getData("static", "author_adjacency");
+    getDummyData("static", "dummy_docs");
     
-	function getDocs(endpoint, id) {
+	function getData(endpoint, id) {
 		dataService.getData(endpoint, id).then(function(data) {
                         
             // assign to scope
@@ -125,6 +141,20 @@ angular.module("explain-controller", [])
             
             // get features
             //getFeatures("classification", data.nodes[0].id);
+           
+		});
+		
+	};
+    
+    function getDummyData(endpoint, id) {
+		dataService.getData(endpoint, id).then(function(data) {
+                        
+            // assign to scope
+			$scope.allDocsNodes = data;
+            
+            // set current batch
+            // separate from all in case we want to lazy load in the future
+            $scope.docNodes = data;
            
 		});
 		

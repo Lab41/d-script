@@ -2,7 +2,11 @@
 
 <button type="button"
         ng-disabled="isDisabled"
-        ng-click="addNode('c')">Add nodes</button>
+        ng-click="addNode('c')">New Document</button>
+
+<!--<button type="button"
+        ng-disabled="details.length == 0"
+        ng-click="changeLayout">Toggle Layout</button>-->
 
 <section>
 	
@@ -10,9 +14,9 @@
         		
 		<!-- STICKY NODES -->
 		<sticky-nodes viz-data="nodes"
-					  canvas-height="400"
+					  canvas-height="500"
 					  canvas-width="500"
-					  title="'Documents'"></sticky-nodes>
+					  title="'Authors'"></sticky-nodes>
 		
 	</div>
     
@@ -24,15 +28,18 @@
             <!-- MEDIA -->
             <div ng-repeat="detail in details"
                  class="slide slide-animation"
-                 ng-hide="!isCurrentSlideIndex($index);"
-                 style="background-image: url('{{ 'data/benchmarking/' + detail.id + '.png' }}')">
+                 ng-hide="!isCurrentSlideIndex($index);">
+                
+                <p class="title-temp">{{ detail.id.split("_")[0] }}</p>
                 
                 <!-- STACKED BAR -->
-                <stacked-bar-chart viz-data="detail.features"
+                <!--<stacked-bar-chart viz-data="detail.features"
                                    canvas-height="60"
                                    canvas-width="700"
                                    orientation="horizontal"
-                                   title="'Feature Relevancy'"></stacked-bar-chart>
+                                   title="'Feature Relevancy'"></stacked-bar-chart>-->
+                
+                <img ng-src="{{ 'data/benchmarking/' + detail.id + '.png' }}"/>
                 
             </div>
 

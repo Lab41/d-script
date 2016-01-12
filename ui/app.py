@@ -10,6 +10,7 @@ sys.path.append("..")
 
 urls = (
     # rest API backend endpoints
+    "/rest/static/(.*)", "static_data",
     "/rest/similarity/(author|fragment)/(.*)", "similarity",
     "/rest/classification/(.*)", "classification",
     # front-end routes to load angular app
@@ -114,7 +115,6 @@ class similarity:
                                 "target": str(neighbor_2_index),
                                 "value": str(neighbor_distance)
                             })
-            print links
             response = { "nodes": nodes, "links": links }
 
         # return data object
@@ -158,7 +158,20 @@ class classification:
         
         # return data object
         return json.dumps(result)
-    
+
+class static_data:
+    def GET(self, name):
+        
+        # set up params
+        i = web.input(name=None)
+        params = web.input()
+        
+        try:
+            f = open("www/data/" + name + ".json")
+            return f.read()
+        except IOError:
+            web.notfound()
+        
 app = web.application(urls, globals())
     
 if __name__ == "__main__":
