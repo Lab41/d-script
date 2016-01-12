@@ -3,5 +3,6 @@ var app = angular.module("app.directives", [
 	"sticky-nodes-directive",
 	"pie-chart-directive",
 	"venn-diagram-directive",
-    "annotate-canvas-directive"
+    "annotate-canvas-directive",
+    "stacked-bar-chart-directive"
 ]);

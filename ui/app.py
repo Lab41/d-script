@@ -4,11 +4,13 @@ import json
 import operator
 import web
 
+import numpy as np
 
 sys.path.append("..")
 
 urls = (
     # rest API backend endpoints
+    "/rest/static/(.*)", "static_data",
     "/rest/similarity/(author|fragment)/(.*)", "similarity",
     "/rest/classification/(.*)", "classification",
     # front-end routes to load angular app
@@ -16,25 +18,6 @@ urls = (
     "/#(.*)", "index",
     "/", "index"
 )
-
-
-def get_author_id(i):
-    author_id = 1 + (i / 4)
-    return author_id
-
-def get_fragment_id(i):
-    file_id = 1 + (i % 4)
-    return file_id
-
-def get_full_id(i):
-    full_id = "{0:03}_{1}".format(get_author_id(i), get_fragment_id(i))
-    return full_id
-
-def reverse_full_id(full_id):
-    author_id, file_id = full_id.split(".")[0].split("_")
-    author_int = int(author_id)
-    file_int = int(file_id)
-    return 4*(author_int - 1) + (file_int - 1)
 
 class www:
     def GET(self, filename):
@@ -54,6 +37,23 @@ class index:
 
 class similarity:
     def GET(self, mode, item_id):
+        def get_author_id(i):
+            author_id = 1 + (i / 4)
+            return author_id
+
+        def get_fragment_id(i):
+            file_id = 1 + (i % 4)
+            return file_id
+
+        def get_full_id(i):
+            full_id = "{0:03}_{1}".format(get_author_id(i), get_fragment_id(i))
+            return full_id
+
+        def reverse_full_id(full_id):
+            author_id, file_id = full_id.split(".")[0].split("_")
+            author_int = int(author_id)
+            file_int = int(file_id)
+            return 4*(author_int - 1) + (file_int - 1)
         
         # set up params
         i = web.input(item_id=None)
@@ -72,45 +72,46 @@ class similarity:
             get_full_id = lambda x: "{0:03}".format(x+1)
             reverse_full_id = lambda x: int(x) - 1
 
-            nodes = [] 
-            for i in xrange(dist_matrix.shape[0]):
-                node_full_id = get_full_id(i)
-                nodes.append({"id": node_full_id})
-            
-            # if we are doing a query on an item, also retrieve the K nearest neighbors
-            # and create link objects for those
-            links = []
-            if item_id is not None and item_id != "":
-                item_index = reverse_full_id(item_id)
-                num_nearest = 5
-                nearest_indices = np.argsort(dist_matrix[item_index,:])[:num_nearest]
-                cutoff_distance = dist_matrix[item_index,nearest_indices[num_nearest]]
-                
-                # make node objects
-                if mode=='fragment':
-                    # mark nodes from same author
-                    self_author = int(get_author(item_index))
-                    self_author_node_indices = range(self_author*4, 4)
-                    for i in self_author_node_indices:
-                        nodes[i]['same_author'] = True
-                    
-                # make link objects    
-                for neighbor_index in nearest_indices:
-                    # add edges to query node
-                    neighbor_distance = dist_matrix[item_index, neighbor_index]
-                    links.append({
-                        "source": item_index,
-                        "target": neighbor_index,
-                        "value": neighbor_distance
-                    })
-                    # add edges between successive neighbors if close enough
-                    for neighbor_2_index in nearest_indices:
+        nodes = [] 
+        for i in xrange(dist_matrix.shape[0]):
+            node_full_id = get_full_id(i)
+            nodes.append({"id": node_full_id})
+
+        # if we are doing a query on an item, also retrieve the K nearest neighbors
+        # and create link objects for those
+        links = []
+        if item_id is not None and item_id != "":
+            item_index = reverse_full_id(item_id)
+            num_nearest = 5
+            nearest_indices = np.argsort(dist_matrix[item_index,:])[1:(num_nearest+1)]
+            cutoff_distance = dist_matrix[item_index,nearest_indices[num_nearest-1]]
+
+            # make node objects
+            if mode=='fragment':
+                # mark nodes from same author
+                self_author = int(get_author_id(item_index)) - 1
+                self_author_node_indices = range(self_author*4, 4)
+                for i in self_author_node_indices:
+                    nodes[i]['same_author'] = True
+
+            # make link objects    
+            for neighbor_index in nearest_indices:
+                # add edges to query node
+                neighbor_distance = dist_matrix[item_index, neighbor_index]
+                links.append({
+                    "source": str(item_index),
+                    "target": str(neighbor_index),
+                    "value": str(neighbor_distance)
+                })
+                # add edges between successive neighbors if close enough
+                for neighbor_2_index in nearest_indices:
+                    if neighbor_2_index > neighbor_index:
                         neighbor_distance = dist_matrix[neighbor_index, neighbor_2_index]
                         if neighbor_distance < cutoff_distance:
                             links.append({
-                                "source": neighbor_index,
-                                "target": neighbor_2_index,
-                                "value": neighbor_distance
+                                "source": str(neighbor_index),
+                                "target": str(neighbor_2_index),
+                                "value": str(neighbor_distance)
                             })
             response = { "nodes": nodes, "links": links }
 
@@ -155,7 +156,20 @@ class classification:
         
         # return data object
         return json.dumps(result)
-    
+
+class static_data:
+    def GET(self, name):
+        
+        # set up params
+        i = web.input(name=None)
+        params = web.input()
+        
+        try:
+            f = open("www/data/" + name + ".json")
+            return f.read()
+        except IOError:
+            web.notfound()
+        
 app = web.application(urls, globals())
     
 if __name__ == "__main__":

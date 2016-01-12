@@ -18,8 +18,16 @@
 
 main {
     
-    margin-top: 2em;
+    margin-top: 3em;
     position: relative;
+    
+}
+
+/* state title */
+main > h1 {
+    
+    font-size: 3em;
+    margin-bottom: 1em;
     
 }
 
@@ -32,8 +40,17 @@ canvas {
 
 section {
     
-    margin-bottom: 1em;
+    display: flex;
+    margin-bottom: 10em;
     margin-top: 1em;
+    /*position: relative;*/
+    
+}
+
+section h1 {
+    
+    font-size: 2em;
+    margin-bottom: 0.5em;
     
 }
 
@@ -43,22 +60,91 @@ article {
 	
 }
 
+/* main sections */
+section div {
+    
+    position: relative;
+    width: 100%;
+    
+}
+
+canvas {
+    
+    cursor: pointer;
+    
+}
+
 /******************************* !CUSTOM *******************************/
 
+.active {
+    
+    fill: teal !important;
+    
+}
+
+nav a.active {
+    
+    color: currentColor;
+    
+}
+
+.tool-tip {
+    
+    min-height: 30px;
+    min-width: 300px;
+    padding: 1em;
+    position: absolute;
+    
+}
+
+/* dummy docs holder */
+sticky-nodes svg {
+    
+    pointer-events: none;
+    position: absolute;
+    z-index: 9999;
+    
+}
+
 sticky-nodes .link {
-  stroke: #000;
-  stroke-width: 1.5px;
+    
+    opacity: 0.25;
+  stroke: currentColor;
+  stroke-width: 0.5px;
+    stroke-linecap: round;
 }
 
 sticky-nodes .node {
-  cursor: move;
-  fill: #ccc;
-  stroke: #000;
-  stroke-width: 1.5px;
+    
+  pointer-events: none;
+  fill: trasnparent;
 }
 
 sticky-nodes .node.fixed {
-  fill: #f00;
+  fill: teal;
+}
+
+/* svg position on slide */
+.slide stacked-bar-chart svg {
+    
+    position: relative;
+    top: -3px;
+    
+}
+
+/* bar slice */
+stacked-bar-chart .feature {
+    
+    cursor: pointer;
+    
+}
+
+/* label */
+stacked-bar-chart .label {
+    
+    font-size: 0.5em;
+    text-anchor: middle;
+    
 }
 
 #imageView {
@@ -67,38 +153,9 @@ sticky-nodes .node.fixed {
     
 }
 
-/******************/
-/**** VIZ TIPS ****/
-/******************/
-
-#viztips {
-    
-    margin-left: auto;
-    margin-right: auto;
-    max-width: 900px;
-    width: 70%;
-    
-}
-
-#viztips button {
-    
-    border: 1px;
-    border-style: solid;
-    bottom: 2em;
-    left: 50%;
-    position: absolute;
-    
-    -webkit-transform: translateX(-50%);
-    -moz-transform: translateX(-50%);
-    -ms-transform: translateX(-50%);
-    -o-transform: translateX(-50%);
-    transform: translateX(-50%);
-    
-}
-
 .slider {
     
-    height: 70vh;
+    height: 500px;
     overflow: hidden;
     margin-bottom: 3em;
     margin-top: 2em;
@@ -108,42 +165,19 @@ sticky-nodes .node.fixed {
 
 .slide {
     
-    height: 100%;
+    /*height: 100%;*/
     position: absolute;
-    top: 0;
+    top: 50%;
+    transform: translateY(-50%);
     left: 0;
-    width: 100%;
-}
+    width: auto;
+    /*width: 100%;
+    
+    /*background-position: 50% 50%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: 100%;*/
 
-.media-wrap img,
-.media-wrap video {
-    
-	bottom: 0;
-    height: auto;
-    left: 50%;
-    position: absolute;
-    
-    -webkit-transform: translateX(-50%);
-    -moz-transform: translateX(-50%);
-    -ms-transform: translateX(-50%);
-    -o-transform: translateX(-50%);
-    transform: translateX(-50%);
-    width: 100%;
-    
-}
-
-.media-wrap {
-    
-    height: 400px;
-    position: relative;
-    
-}
-
-.viz-text {
-    
-    position: absolute;
-    top: 420px;
-    
 }
 
 .arrow {
@@ -162,7 +196,7 @@ sticky-nodes .node.fixed {
     height: 2em;
     outline: none;
     cursor: pointer;
-    opacity: 0.2;
+    opacity: 0;
     transition: 0.2s linear all;
     
 }
@@ -252,8 +286,8 @@ NAV
     text-indent: 100%;
     white-space: nowrap;
     overflow: hidden;
-    background: rgb(116, 116, 116);
-    border: 1px solid transparent;
+    background: transparent;
+    border: 1px solid currentColor;
     outline: none;
     -webkit-box-shadow: none;
     -moz-box-shadow: none;
@@ -267,6 +301,6 @@ NAV
 }
 
 .dots .dot a.active {
-    border-color: #FFF;
-    background-color: transparent;
+    border-color: currentColor;
+    background-color: currentColor;
 }
