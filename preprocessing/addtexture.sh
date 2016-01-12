@@ -6,5 +6,5 @@ if [ $# -ne 3 ]; then
 fi
 
 convert $3 -colorspace gray -normalize \
-	-fill gray50 +level 60% $3.gif
+	-fill gray50 +level 90% $3.gif
 composite $3.gif $1 -tile -compose Hardlight $2

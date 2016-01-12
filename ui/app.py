@@ -20,6 +20,23 @@ urls = (
 )
 
 
+def get_author_id(i):
+    author_id = 1 + (i / 4)
+    return author_id
+
+def get_fragment_id(i):
+    file_id = 1 + (i % 4)
+    return file_id
+
+def get_full_id(i):
+    full_id = "{0:03}_{1}".format(get_author_id(i), get_fragment_id(i))
+    return full_id
+
+def reverse_full_id(full_id):
+    author_id, file_id = full_id.split(".")[0].split("_")
+    author_int = int(author_id)
+    file_int = int(file_id)
+    return 4*(author_int - 1) + (file_int - 1)
 
 class www:
     def GET(self, filename):
@@ -163,8 +180,37 @@ class static_data:
     def GET(self, name):
         
         # set up params
-        i = web.input(name=None)
+        i = web.input(doc_id=None)
         params = web.input()
+
+        feats_path = "data/fiel_feat_icdar13_100shingles.hdf5"
+        model_path = None
+
+        # get correct author (HACK)
+        correct_author_id = doc_id.split("_")[0]
+
+        # retrieve features (a lookup, for now)
+        with h5py.File(feats_path) as f:
+            doc_feats = f[correct_author_id][doc_id + ".tif"].value
+            # take mean over shingles
+            doc_feats = np.mean(doc_feats, axis=0)
+        
+        # run classifier
+        author_probs = foo.authorProbs(model_path, doc_feats)
+        
+        # get top K authors
+        num_authors = 5
+        author_limit = min(num_authors, len(author_probs))
+        probability_cutoff = np.sort([-prob for prob in author_probs.itervalues()])[num_authors]
+        authors_list = [ {"id": author, "value": prob} for author, prob in author_probs.iteritems() 
+            if prob > probability_cutoff ]
+        
+        # sort by probability
+        authors_list = sorted(authors_list, key=operator.itemgetter("value"), reverse=True)
+        result = {
+            "id": doc_id,
+            "author_id" : correct_author_id,
+            "authors": authors_list }
         
         try:
             f = open("www/data/" + name + ".json")
