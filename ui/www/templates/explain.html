@@ -4,9 +4,9 @@
         ng-disabled="isDisabled"
         ng-click="addNode('c')">New Document</button>
 
-<!--<button type="button"
+<button type="button"
         ng-disabled="details.length == 0"
-        ng-click="changeLayout">Toggle Layout</button>-->
+        ng-click="toggleLayout(layout)">{{ layout }} Layout</button>
 
 <section>
 	
@@ -22,57 +22,10 @@
     
     <div>
         
-        <!-- IMAGE -->
-        <div class="slider">
-            
-            <!-- MEDIA -->
-            <div ng-repeat="detail in details"
-                 class="slide slide-animation"
-                 ng-hide="!isCurrentSlideIndex($index);">
-                
-                <p class="title-temp">{{ detail.id.split("_")[0] }}</p>
-                
-                <!-- STACKED BAR -->
-                <!--<stacked-bar-chart viz-data="detail.features"
-                                   canvas-height="60"
-                                   canvas-width="700"
-                                   orientation="horizontal"
-                                   title="'Feature Relevancy'"></stacked-bar-chart>-->
-                
-                <img ng-src="{{ 'data/benchmarking/' + detail.id + '.png' }}"/>
-                
-            </div>
-
-        </div>
+        <!-- IMAGE SLIDER -->
+        <image-slider viz-data="details"
+                      layout="layout"></image-slider>
         
-        <!-- NAV ARROWS -->
-        <a class="arrow prev"
-           ng-click="next();">
-            <svg viewBox="0 0 100 58.5">
-                <use xlink:href="assets/arrow-line-2.svg#artwork"></use>
-            </svg>
-        </a>
-
-        <a class="arrow next"
-           ng-click="previous();">
-        <svg viewBox="0 0 100 58.5">
-                <use xlink:href="assets/arrow-line-2.svg#artwork"></use>
-            </svg>
-        </a>
-
-        <!-- NAV DOTS -->
-        <nav class="nav">
-            <div class="wrapper">
-                <ul class="dots">
-                    <li class="dot"
-                        ng-repeat="detail in details">
-                        <a ng-class="{ 'active' : isCurrentSlideIndex($index) }"
-                           ng-click="setCurrentSlideIndex($index);">{{ $index }}</a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-
     </div>
     
 </section>
