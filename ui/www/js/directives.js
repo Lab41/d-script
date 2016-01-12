@@ -4,5 +4,6 @@ var app = angular.module("app.directives", [
 	"pie-chart-directive",
 	"venn-diagram-directive",
     "annotate-canvas-directive",
-    "stacked-bar-chart-directive"
+    "stacked-bar-chart-directive",
+    "image-slider-directive"
 ]);

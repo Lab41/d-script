@@ -1,0 +1,65 @@
+<div class="slider"
+     ng-show="layout == 'Grid'">
+
+    <!-- MEDIA -->
+    <div ng-repeat="detail in vizData"
+         class="slide slide-animation"
+         ng-hide="!isCurrentSlideIndex($index);">
+
+        <p class="title-temp">{{ detail.id.split("_")[0] }}</p>
+
+        <!-- STACKED BAR -->
+        <!--<stacked-bar-chart viz-data="detail.features"
+                           canvas-height="60"
+                           canvas-width="700"
+                           orientation="horizontal"
+                           title="'Feature Relevancy'"></stacked-bar-chart>-->
+
+        <img ng-src="{{ 'data/benchmarking/' + detail.id + '.png' }}"/>
+
+    </div>
+
+</div>
+
+<div class="grid"
+     ng-show="layout == 'Stack'">
+    
+    <div ng-repeat="detail in vizData"
+         style="background-image: url('{{ 'data/benchmarking/' + detail.id + '.png' }}')">
+        
+        <p>{{ detail.id.split("_")[0] }}</p>
+                
+    </div>
+    
+</div>
+
+<!-- NAV ARROWS -->
+<a class="arrow prev"
+   ng-click="next();"
+   ng-show="layout == 'Grid'">
+    <svg viewBox="0 0 100 58.5">
+        <use xlink:href="assets/arrow-line-2.svg#artwork"></use>
+    </svg>
+</a>
+
+<a class="arrow next"
+   ng-click="previous();"
+   ng-show="layout == 'Grid'">
+    <svg viewBox="0 0 100 58.5">
+        <use xlink:href="assets/arrow-line-2.svg#artwork"></use>
+    </svg>
+</a>
+
+<!-- NAV DOTS -->
+<nav class="nav"
+     ng-show="layout == 'Grid'">
+    <div class="wrapper">
+        <ul class="dots">
+            <li class="dot"
+                ng-repeat="detail in vizData">
+                <a ng-class="{ 'active' : isCurrentSlideIndex($index) }"
+                   ng-click="setCurrentSlideIndex($index);">{{ $index }}</a>
+            </li>
+        </ul>
+    </div>
+</nav>

@@ -16,10 +16,17 @@
 
 /******************************* !GLOBALS *******************************/
 
+html, body {
+    
+    font-size: 120%;
+    
+}
+
 main {
     
-    margin-top: 3em;
+    margin-top: 2em;
     position: relative;
+    width: 90%;
     
 }
 
@@ -68,60 +75,35 @@ section div {
     
 }
 
-canvas {
-    
-    cursor: pointer;
-    
-}
-
 /******************************* !CUSTOM *******************************/
-
-.active {
-    
-    fill: teal !important;
-    
-}
-
-nav a.active {
-    
-    color: currentColor;
-    
-}
-
-.tool-tip {
-    
-    min-height: 30px;
-    min-width: 300px;
-    padding: 1em;
-    position: absolute;
-    
-}
-
-/* dummy docs holder */
-sticky-nodes svg {
-    
-    pointer-events: none;
-    position: absolute;
-    z-index: 9999;
-    
-}
-
-sticky-nodes .link {
-    
-    opacity: 0.25;
-  stroke: currentColor;
-  stroke-width: 0.5px;
-    stroke-linecap: round;
-}
 
 sticky-nodes .node {
     
-  pointer-events: none;
-  fill: trasnparent;
+    cursor: pointer;
+    fill: rgba(150, 149, 149, 0.7);
+    
 }
 
-sticky-nodes .node.fixed {
-  fill: teal;
+sticky-nodes .node:hover {
+    
+    fill: rgba(198, 8, 203, 0.7);
+    
+}
+
+sticky-nodes .node.active {
+    
+    fill: rgb(198, 8, 203);
+    
+}
+
+/* node text */
+sticky-nodes text {
+    
+    font-size: 0.5em;
+    font-weight: bold;
+    pointer-events: none;
+    text-anchor: middle;
+    
 }
 
 /* svg position on slide */
@@ -153,9 +135,41 @@ stacked-bar-chart .label {
     
 }
 
+.grid {
+    
+    align-content: space-between;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    
+}
+
+.grid div {
+    
+    background-position: 0% 0%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: 250px;
+    width: 400px;
+    margin: auto;
+    margin-bottom: 1em;
+    
+}
+
+.grid p {
+    
+    background: rgb(35,24,24);
+    color: white;
+    display: inline;
+    padding: 0.5em;
+    position: relative;
+    top: 0.7em;
+    
+}
+
 .slider {
     
-    height: 500px;
+    height: 825px;
     overflow: hidden;
     margin-bottom: 3em;
     margin-top: 2em;
@@ -283,10 +297,10 @@ NAV
     left: 2px;
     width: 0.75em;
     height: 0.75em;
-    text-indent: 100%;
+    text-indent: 150%;
     white-space: nowrap;
     overflow: hidden;
-    background: transparent;
+    background: rgb(212,212,212);
     border: 1px solid currentColor;
     outline: none;
     -webkit-box-shadow: none;
@@ -302,5 +316,5 @@ NAV
 
 .dots .dot a.active {
     border-color: currentColor;
-    background-color: currentColor;
+    background-color: rgb(35,34,34);
 }

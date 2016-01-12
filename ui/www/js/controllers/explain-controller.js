@@ -13,46 +13,31 @@ angular.module("explain-controller", [])
     $scope.nodes;
     $scope.docNodes;
     $scope.allDocNodes;
-    $scope.offset = 0; // starting point
+    $scope.offset = 0; // starting point   
+    $scope.layout = "Grid";
     
-    $scope.layout = "stack";
     
     /****************************/
     /********* !EVENTS **********/
     /****************************/
-    
-    // control slider navigation
-    $scope.currentIndex = 0;
-    
-    $scope.setCurrentSlideIndex = function(idx) {
-        $scope.currentIndex = idx;
-    };
-    
-    $scope.isCurrentSlideIndex = function(idx) {
-        return $scope.currentIndex === idx;
-    };
-    
-    $scope.previous = function() {
-        $scope.currentIndex = ($scope.currentIndex < $scope.details.length - 1) ? ++$scope.currentIndex : 0;
-    };
-    
-    $scope.next = function() {
-        $scope.currentIndex = ($scope.currentIndex > 0) ? --$scope.currentIndex : $scope.details.length - 1;
-    };
     
     // add new node
     $scope.addNode = function(id) {
         
         // add dummy node
         // might be API call?
-       /* var allNodes = $scope.docNodes.nodes;
+        var allNodes = $scope.nodes.nodes;
         var links = $scope.nodes.links;
-        var newNodes = allNodes.concat({"id": "new"});
+        var newNodes = allNodes.concat({"id": "001"});
+        var newLinks = links.concat({"source": 0, "target": 180, "value": "83.7159"});
         
         var obj = {nodes: newNodes, links: links};
         
         // add to scope to trigger viz change
-        $scope.nodes = obj;*/
+        $scope.nodes = obj;
+        
+        // disable button
+        $scope.isDisabled = true;
         
     };
     
@@ -107,16 +92,11 @@ angular.module("explain-controller", [])
        
     };
     
-    $scope.toggleLayout = function(current) {
-        
-        var layout = current;
-        
-        if (layout == "stack") {
-            console.log(this);
-            
-        }
-        
-    }
+    $scope.toggleLayout = function() {
+        $scope.layout = $scope.layout == "Grid" ? "Stack" : "Grid";// indicates which layout user is navigating to
+    };
+    
+    
     
     /*******************************/
     /********* !FUNCTIONS **********/
@@ -124,7 +104,6 @@ angular.module("explain-controller", [])
     
     // get data
     getData("static", "author_adjacency");
-    getDummyData("static", "dummy_docs");
     
 	function getData(endpoint, id) {
 		dataService.getData(endpoint, id).then(function(data) {
