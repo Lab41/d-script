@@ -8,7 +8,8 @@ class MiniBatcher:
     VAL = 2
     def __init__(self, hdf5_file, input_keys, item_getter, normalize=None,
                  batch_size=32, min_fragments=3, 
-                 train_pct=.7, test_pct=.2, val_pct=.1, rng_seed=888):
+                 train_pct=.7, test_pct=.2, val_pct=.1, rng_seed=888,
+                 **getter_kwargs):
         """
         Set up MiniBatcher with replicable train/test/validation
         splitting functionality.
@@ -36,6 +37,7 @@ class MiniBatcher:
         self.min_fragments = min_fragments
 
         self.normalize = normalize
+        self.getter_kwargs = getter_kwargs
 
         if round(1e6*(train_pct + test_pct + val_pct))!= 1e6:
             raise ValueError('Train(%f)+ Test(%f) + Validation(%f) set percentatages must add to 1.0' %(train_pct,test_pct,val_pct))
@@ -132,7 +134,7 @@ class MiniBatcher:
             top_key = key[0]
             top_ind = self.name_2_id[top_key]
 
-            data = self.item_getter(self.fIn, key)
+            data = self.item_getter(self.fIn, key, **self.getter_kwargs)
 
             if self.normalize:
                 data = self.normalize(data)

@@ -4,9 +4,21 @@ import numpy as np
 from collections import defaultdict
 from minibatcher import MiniBatcher
 
-class IAM_MiniBatcher:
+def zero_one(x, ceiling=255.)
+    """ Scale a value to fall between 0 and 1,
+    and reverse it. By default converts byte-valued variables
+    (where 255 is absence) to float-valued ones where 0.0
+    is absence"""
+    
+    return 1. - float(x)/ceiling
+
+class Hdf5MiniBatcher:
+    """ Iterator interface for generating minibatches from 
+    'author-fragment' style HDF5 sets of data
+    """
+    
     @staticmethod
-    def shingle_item_getter(f, key, shingle_dim=(120,120)):
+    def shingle_item_getter(f, key, shingle_dim=(120,120), fill_value=255):
 
         '''
         Retrieve a line from an iam hdf5 file and shingle into the line
@@ -15,40 +27,35 @@ class IAM_MiniBatcher:
 
         # Key format is {author:{form:data}}
         (author, form) = key
-        # Extract line from HDF5 file
+        # Extract fragment from HDF5 file
         original_line = f[author][form]
-        # There was an option to index into form. That
-        # format is deprecated. It originally had a hierarchy
-        #      Key format is {author:{form:{line:data}}
-        # and the code was:
-        #      (author, form, line) = key
-        #      original_line = f[author][form][line]
 
         # Pull shingle from the line
-        # TODO: pull out shingle_dim[n] into two holder variables
         (height, width) = original_line.shape
         max_x = max(width - shingle_dim[1], 1)
         max_y = max(height - shingle_dim[0], 1)
         x_start = np.random.randint(0, max_x)
         y_start = np.random.randint(0, max_y)
+        shingle_height, shingle_width = shingle_dim
+
         # check if the line is too small on at least one axis
-        if width < shingle_dim[1]:
+        if width < shingle_width:
             x_slice = slice(0,width)
         else:
-            x_slice = slice(x_start, x_start+shingle_dim[1])
-        if  height < shingle_dim[0]: 
+            x_slice = slice(x_start, x_start+shingle_width)
+        if  height < shingle_height: 
             y_slice = slice(0,height)
         else:
-            y_slice = slice(y_start, y_start+shingle_dim[1])
+            y_slice = slice(y_start, y_start+shingle_height)
         slice_width = x_slice.stop - x_slice.start
         slice_height = y_slice.stop - y_slice.start
         # create an output shingle, copy our thing onto it
         output_arr = np.zeros(shingle_dim)
-        output_arr.fill(255)
+        output_arr.fill(fill_value)
         output_arr[:slice_height,:slice_width] = original_line[y_slice, x_slice]
         return output_arr
 
-    def __init__(self, fname, num_authors, num_forms_per_author, default_mode=MiniBatcher.TRAIN, shingle_dim=(120,120), batch_size=32, train_pct=.7, test_pct=.2, val_pct=.1):
+    def __init__(self, fname, num_authors, num_forms_per_author, normalize=zero_one, default_mode=MiniBatcher.TRAIN, shingle_dim=(120,120), batch_size=32, train_pct=.7, test_pct=.2, val_pct=.1, rng_seed=888, fill_value=255):
         self.hdf5_file = fname
 
         fIn = h5py.File(self.hdf5_file, 'r')
@@ -62,7 +69,6 @@ class IAM_MiniBatcher:
         if len(authors) < num_authors:
             raise ValueError("There are only %d authors with more than %d forms"%(len(authors), num_forms_per_author))
 
-
         keys = []
         # Get all the keys from our hdf5 file
         for author in authors[:num_authors]: # Limit us to num_authors
@@ -75,14 +81,15 @@ class IAM_MiniBatcher:
                 #         keys.append((author,form,line_name))
 
         # Remove duplicates to prevent test/val contamination
-        keys = list(set(keys))
-
-        normalize = lambda x: 1.0 - x.astype(np.float32)/255.0
+        keys = list(set(keys)) 
 
         item_getter = lambda f, key: IAM_MiniBatcher.shingle_item_getter(f, key, shingle_dim)
         self.batch_size = batch_size
         m = MiniBatcher(fIn, keys,item_getter=item_getter, normalize=normalize,
-                        batch_size=self.batch_size, min_fragments=0, train_pct=train_pct, test_pct=test_pct, val_pct=val_pct)
+                        batch_size=self.batch_size, min_fragments=0, 
+                        train_pct=train_pct, test_pct=test_pct, val_pct=val_pct,
+                        rng_seed=rng_seed, 
+                        shingle_dim=shingle_dim, fill_value=fill_value)
         self.m = m
         self.default_mode = default_mode
 
