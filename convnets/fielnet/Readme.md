@@ -13,4 +13,5 @@ Notes:
 * No X-Validation
 * Accuracy Train 79.05%
 * Shard into lines at 120x120
+* Shard into lines with verbatim network at 59 x 59
 * Did not run with Yonas's minibatcher. Used my own custom ingest.
