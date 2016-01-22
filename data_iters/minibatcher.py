@@ -8,8 +8,7 @@ class MiniBatcher:
     VAL = 2
     def __init__(self, hdf5_file, input_keys, item_getter, normalize=None,
                  batch_size=32, min_fragments=3, 
-                 train_pct=.7, test_pct=.2, val_pct=.1, rng_seed=888,
-                 **getter_kwargs):
+                 train_pct=.7, test_pct=.2, val_pct=.1, rng_seed=888):
         """
         Set up MiniBatcher with replicable train/test/validation
         splitting functionality.
@@ -29,7 +28,8 @@ class MiniBatcher:
                 the minimum number of fragments required to be included?
             train_pct, test_pct, val_pct -- what fractions of data are to be
                 assigned to data subsets?
-            rng_seed -- random number generator seed
+            rng_seed -- random number generator seed. Used only for minibatcher-local random state 
+                (does not affect item_getter)
         """
         self.mode = self.TRAIN
         self.fIn = hdf5_file
@@ -37,7 +37,7 @@ class MiniBatcher:
         self.min_fragments = min_fragments
 
         self.normalize = normalize
-        self.getter_kwargs = getter_kwargs
+        #self.getter_kwargs = getter_kwargs
 
         if round(1e6*(train_pct + test_pct + val_pct))!= 1e6:
             raise ValueError('Train(%f)+ Test(%f) + Validation(%f) set percentatages must add to 1.0' %(train_pct,test_pct,val_pct))
@@ -45,7 +45,7 @@ class MiniBatcher:
         self.test_pct = test_pct
         self.val_pct = val_pct
 
-        np.random.seed(rng_seed)
+        self.rng = np.random.RandomState(rng_seed)
         logger = logging.getLogger(__name__)
 
         # Unfortunately we have to iterate through a few times to make sure we do this right
@@ -84,7 +84,7 @@ class MiniBatcher:
             if author_key not in authors_in_set:
                 continue
             author_fragment_list = [ (author_key, fragment_key) for fragment_key in authors_fragments_keys[author_key] ]
-            np.random.shuffle(author_fragment_list)
+            self.rng.shuffle(author_fragment_list)
             # build list of cutoffs for list of (shuffled) keys
             num_fragments = len(author_fragment_list)
             probability_thresholds = [ train_pct, train_pct + test_pct, train_pct + test_pct + val_pct ] 
@@ -115,7 +115,7 @@ class MiniBatcher:
 
         # Randomize batch
         batch_keys = []
-        randints = np.random.randint(0, len(src_arr), self.batch_size)
+        randints = self.rng.randint(0, len(src_arr), self.batch_size)
         for i in range(self.batch_size):
             ind = randints[i]
             try:
@@ -134,7 +134,7 @@ class MiniBatcher:
             top_key = key[0]
             top_ind = self.name_2_id[top_key]
 
-            data = self.item_getter(self.fIn, key, **self.getter_kwargs)
+            data = self.item_getter(self.fIn, key)
 
             if self.normalize:
                 data = self.normalize(data)
