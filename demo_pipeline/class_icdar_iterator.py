@@ -116,7 +116,7 @@ class ICDARFeaturizer:
     """
     def __init__(self, icdar_hdf5_path, fiel_weights):
         """ hdf5_path -- path to docid-only ICDAR13 set"""
-        self.fielnet = fielutil.fielnet(fiel_weights, layer='fc7')
+        self.fielnet = fielutil.tfdnet(fiel_weights, layer='fc7')
         # vacuous compile, will not be trained
         self.fielnet.compile(optimizer='sgd', loss='mse')
         self.icdar_hdf5_path = icdar_hdf5_path

@@ -17,7 +17,7 @@ from keras.layers.normalization import BatchNormalization as BN
 
 import matplotlib.pylab as plt
 import sys
-sys.path.append('/work/code/repo/d-script/')
+sys.path.append('../../d-script/')
 # d-script imports
 from data_iters.minibatcher import MiniBatcher
 from data_iters.iam_hdf5_iterator import IAM_MiniBatcher
@@ -71,7 +71,7 @@ def get_batch( author_hdf5_file, author_ids, shingle_size=(120,120), data_size=3
         
     return author_batch, author_truth
 
-def fielnet( hdf5file, layer='softmax', compile=False ):
+def tfdnet( hdf5file, layer='softmax', compile=False ):
     model = Sequential()
     model.add(Convolution2D(48, 12, 12,
                         border_mode='valid',
@@ -153,8 +153,60 @@ def fielnet( hdf5file, layer='softmax', compile=False ):
     return model
 
     
-# featmodel = Sequential()
-# for i in xrange( len(model.layers)-4 ):
-#     featmodel.add( model.layers[i] )
-
+def verbatimnet( layer='softmax', compile=False ):
     
+    layers = ['conv1', 'conv2', 'conv3', 'conv4', 'conv5',
+              'fc6', 'fc7', 'softmax']
+    
+    model = Sequential()
+    model.add(Convolution2D(96, 11, 11,
+                            border_mode='valid', subsample=(4,4),
+                            input_shape=(1, 56, 56),
+                            activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2,2)))
+
+    if layer in layers[-7:]:
+        model.add(Convolution2D(96, 5, 5, activation='relu', border_mode='same'))
+        model.add(MaxPooling2D(pool_size=(2,2)))
+
+    if layer in layers[-6:]:
+        model.add(Convolution2D(256, 3, 3, border_mode = 'same', activation='relu'))
+
+    if layer in layers[-5:]:
+        model.add(Convolution2D(256, 3, 3, border_mode = 'same', activation='relu'))
+
+    if layer in layers[-4:]:
+        model.add(Convolution2D(256, 3, 3, border_mode = 'same', activation='relu'))
+        model.add(MaxPooling2D(pool_size=(3, 3)))
+        model.add(Dropout(0.25))
+    
+    if layer in layers[-3:]:
+        model.add(Flatten())
+        model.add(Dense(4096, activation='relu'))
+
+    if layer in layers[-2:]:
+        model.add(Dense(4096, activation='relu'))
+        model.add(Dropout(0.25))
+    
+    if layer in layers[-1]:
+        model.add(Dense(num_authors))
+        model.add(Activation('softmax'))
+    
+    if compile:
+        print "Compiling model"
+        sgd = SGD(lr=lr, decay=1e-6, momentum=0.9, nesterov=True)
+        model.compile(loss='categorical_crossentropy', optimizer=sgd)
+        print "Finished compilation"
+    
+    return model
+
+def loadparams( model, hdf5file ):
+    
+    params = h5py.File(hdf5file)
+    for k in range(len(model.layers)):
+        # This method does not make use of Sequential.set_weights()
+        # for backwards compatibility.
+        g = params['layer_{}'.format(k)]
+        weights = [g['param_{}'.format(p)] for p in range(g.attrs['nb_params'])]
+        model.layers[k].set_weights(weights)
+    params.close()
