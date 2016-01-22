@@ -1,17 +1,34 @@
 import logging
+import PIL
 import h5py
 import numpy as np
 from collections import defaultdict
 from minibatcher import MiniBatcher
 
-def zero_one(x, ceiling=255.)
+def zero_one(x, ceiling=255.):
     """ Scale a value to fall between 0 and 1,
     and reverse it. By default converts byte-valued variables
     (where 255 is absence) to float-valued ones where 0.0
     is absence"""
     
-    return 1. - float(x)/ceiling
+    try:
+        transformed = 1. - float(x)/ceiling
+    except TypeError:
+        transformed = 1. - x.astype(np.float32)/ceiling
+    return transformed
 
+def rescale_array(x, scale_factor=0.25):
+    logger = logging.getLogger(__name__)
+    logger.debug(x.shape)
+    img = PIL.Image.fromarray(x)
+    new_w = int(x.shape[1] * scale_factor)
+    new_h = int(x.shape[0] * scale_factor)
+    img = img.resize((new_w,new_h),PIL.Image.NEAREST)
+    x = np.array(img.getdata()).reshape(new_h, new_w)
+    logger.debug(x.shape)
+    return x
+    
+    
 class Hdf5MiniBatcher:
     """ Iterator interface for generating minibatches from 
     'author-fragment' style HDF5 sets of data
