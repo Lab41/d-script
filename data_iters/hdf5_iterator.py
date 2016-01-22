@@ -88,6 +88,22 @@ class Hdf5MiniBatcher:
 
     def __init__(self, fname, num_authors, num_forms_per_author, normalize=zero_one, default_mode=MiniBatcher.TRAIN, shingle_dim=(120,120), batch_size=32, train_pct=.7, test_pct=.2, val_pct=.1, rng_seed=888, fill_value=255,
                 scale_factor=None,std_threshold=None):
+        """
+        Arguments
+        fname -- path to HDF5 set
+        num_authors -- number of authors to retrieve from HDF5 set
+        num_forms_per_author -- number of fragments to retrieve per author
+        normalize -- function/callable to normalize shingles in each fragment,
+        default_mode -- which set (TRAIN, TEST, VAL) should MiniBatcher return by default?
+        shingle_dim=(120,120) -- shingle size (rows, cols)
+        batch_size
+        train_pct, test_pct, val_pct -- data fold proportions
+        rng_seed -- random number seed for item_getter's random number generator and MiniBatcher's (separate)
+            random number generator
+        fill_value -- what value counts as blank, in case padding needs to be carried out?
+        scale_factor -- scale fragments by this much before shingling
+        std_threshold -- yield only shingles above this standard deviation, in unnormalized units
+        """
         
         self.rng = np.random.RandomState(rng_seed)
         logger = logging.getLogger(__name__)
