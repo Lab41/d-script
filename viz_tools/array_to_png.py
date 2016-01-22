@@ -20,7 +20,7 @@ def get_png_from_array(data):
     bio = io.BytesIO()
     im.convert('RGB')
     im.save(bio, format='png')
-    return img.getvalue()
+    return bio.getvalue()
 
 def display_img_array(ima):
     bio=get_png_from_array(ima)
