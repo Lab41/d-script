@@ -35,7 +35,11 @@ class Hdf5MiniBatcher:
     """
     
     @staticmethod
-    def shingle_item_getter(f, key, shingle_dim=(120,120), fill_value=255):
+    def shingle_item_getter(f, key, shingle_dim=(120,120), 
+            fill_value=255, 
+            rng=None, 
+            scale_factor=None,
+            std_threshold=None):
 
         '''
         Retrieve a line from an iam hdf5 file and shingle into the line
@@ -45,31 +49,41 @@ class Hdf5MiniBatcher:
         # Key format is {author:{form:data}}
         (author, form) = key
         # Extract fragment from HDF5 file
-        original_line = f[author][form]
+        original_fragment = f[author][form]
+        
+        # Rescale if necessary
+        if scale_factor is not None:
+            original_fragment = rescale_array(original_fragment[()], scale_factor)
 
-        # Pull shingle from the line
-        (height, width) = original_line.shape
-        max_x = max(width - shingle_dim[1], 1)
-        max_y = max(height - shingle_dim[0], 1)
-        x_start = np.random.randint(0, max_x)
-        y_start = np.random.randint(0, max_y)
-        shingle_height, shingle_width = shingle_dim
+        # Pull shingle from the line, until it satisfies constraints
+        while True:
+            (height, width) = original_fragment.shape
+            max_x = max(width - shingle_dim[1], 1)
+            max_y = max(height - shingle_dim[0], 1)
+            x_start = rng.randint(0, max_x)
+            y_start = rng.randint(0, max_y)
+            shingle_height, shingle_width = shingle_dim
 
-        # check if the line is too small on at least one axis
-        if width < shingle_width:
-            x_slice = slice(0,width)
-        else:
-            x_slice = slice(x_start, x_start+shingle_width)
-        if  height < shingle_height: 
-            y_slice = slice(0,height)
-        else:
-            y_slice = slice(y_start, y_start+shingle_height)
-        slice_width = x_slice.stop - x_slice.start
-        slice_height = y_slice.stop - y_slice.start
-        # create an output shingle, copy our thing onto it
-        output_arr = np.zeros(shingle_dim)
-        output_arr.fill(fill_value)
-        output_arr[:slice_height,:slice_width] = original_line[y_slice, x_slice]
+            # check if the line is too small on at least one axis
+            if width < shingle_width:
+                x_slice = slice(0,width)
+            else:
+                x_slice = slice(x_start, x_start+shingle_width)
+            if  height < shingle_height: 
+                y_slice = slice(0,height)
+            else:
+                y_slice = slice(y_start, y_start+shingle_height)
+            slice_width = x_slice.stop - x_slice.start
+            slice_height = y_slice.stop - y_slice.start
+            # create an output shingle, copy our thing onto it
+            output_arr = np.zeros(shingle_dim)
+            output_arr.fill(fill_value)
+            output_arr[:slice_height,:slice_width] = original_fragment[y_slice, x_slice]
+            shingle_std=np.std(output_arr)
+            logger=logging.getLogger(__name__)
+            logger.debug(shingle_std)
+            if std_threshold is None or shingle_std > std_threshold:
+                break
         return output_arr
 
     def __init__(self, fname, num_authors, num_forms_per_author, normalize=zero_one, default_mode=MiniBatcher.TRAIN, shingle_dim=(120,120), batch_size=32, train_pct=.7, test_pct=.2, val_pct=.1, rng_seed=888, fill_value=255):
