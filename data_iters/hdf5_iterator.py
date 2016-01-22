@@ -86,7 +86,12 @@ class Hdf5MiniBatcher:
                 break
         return output_arr
 
-    def __init__(self, fname, num_authors, num_forms_per_author, normalize=zero_one, default_mode=MiniBatcher.TRAIN, shingle_dim=(120,120), batch_size=32, train_pct=.7, test_pct=.2, val_pct=.1, rng_seed=888, fill_value=255):
+    def __init__(self, fname, num_authors, num_forms_per_author, normalize=zero_one, default_mode=MiniBatcher.TRAIN, shingle_dim=(120,120), batch_size=32, train_pct=.7, test_pct=.2, val_pct=.1, rng_seed=888, fill_value=255,
+                scale_factor=None,std_threshold=None):
+        
+        self.rng = np.random.RandomState(rng_seed)
+        logger = logging.getLogger(__name__)
+        logger.debug(self.rng.rand())
         self.hdf5_file = fname
 
         fIn = h5py.File(self.hdf5_file, 'r')
@@ -112,15 +117,20 @@ class Hdf5MiniBatcher:
                 #         keys.append((author,form,line_name))
 
         # Remove duplicates to prevent test/val contamination
-        keys = list(set(keys)) 
+        keys = list(set(keys))
 
-        item_getter = lambda f, key: IAM_MiniBatcher.shingle_item_getter(f, key, shingle_dim)
+        item_getter = lambda f, key: Hdf5MiniBatcher.shingle_item_getter(f, key,
+                                                                         shingle_dim=(120, 120),
+                                                                         fill_value=255,
+                                                                         rng=self.rng,
+                                                                         scale_factor=scale_factor,
+                                                                         std_threshold=std_threshold)
+        
         self.batch_size = batch_size
         m = MiniBatcher(fIn, keys,item_getter=item_getter, normalize=normalize,
                         batch_size=self.batch_size, min_fragments=0, 
                         train_pct=train_pct, test_pct=test_pct, val_pct=val_pct,
-                        rng_seed=rng_seed, 
-                        shingle_dim=shingle_dim, fill_value=fill_value)
+                        rng_seed=rng_seed)
         self.m = m
         self.default_mode = default_mode
 
