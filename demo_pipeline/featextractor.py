@@ -38,7 +38,7 @@ def extract_imfeats( hdf5name, network, shingle_dims=(56,56) ):
         shards = np.zeros( (0, 1, shingle_dims[0], shingle_dims[1]) )
 
         # Collect the inputs for the image
-        for shard in StepShingler(img, hstep=30, vstep=30, shingle_size=(56,56)):    
+        for shard in StepShingler(img, hstep=20, vstep=20, shingle_size=(56,56)):    
             shard = np.expand_dims(np.expand_dims(shard, 0),0)
             shards = np.concatenate( (shards, shard) )
         print "Loaded %d shards in and predicting on image %s" %(len(shards), imname)
