@@ -2,8 +2,6 @@
 
 import io
 import logging
-# !pip install pypng
-#import png
 import numpy as np
 import PIL
 from IPython.display import Image, display
@@ -29,11 +27,9 @@ def display_img_array(ima):
     
 def rescale_img_array(x, scale_factor):
     logger = logging.getLogger(__name__)
-    logger.debug(x.shape)
     img = PIL.Image.fromarray(x)
     new_w = int(x.shape[1] * scale_factor)
     new_h = int(x.shape[0] * scale_factor)
     img = img.resize((new_w,new_h),PIL.Image.NEAREST)
     x = np.array(img.getdata(), dtype=x.dtype).reshape(new_h, new_w)
-    logger.debug(x.shape)
     return x

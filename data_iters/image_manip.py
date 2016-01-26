@@ -1,6 +1,5 @@
 import numpy as np
 import logging
-import PIL
 
 def sample_with_rotation(x, center, angle, 
                          box_dim=(120,120), 
@@ -96,11 +95,3 @@ def sample_with_rotation(x, center, angle,
             pass    
     return sample
 
-def rescale_array(x, scale_factor=0.25):
-    logger = logging.getLogger(__name__)
-    img = PIL.Image.fromarray(x)
-    new_w = int(x.shape[1] * scale_factor)
-    new_h = int(x.shape[0] * scale_factor)
-    img = img.resize((new_w,new_h),PIL.Image.NEAREST)
-    x = np.array(img.getdata()).reshape(new_h, new_w)
-    return x
