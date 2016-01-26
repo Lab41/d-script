@@ -1,4 +1,6 @@
 import numpy as np
+import logging
+import PIL
 
 def sample_with_rotation(x, center, angle, 
                          box_dim=(120,120), 
@@ -7,7 +9,7 @@ def sample_with_rotation(x, center, angle,
                          stdev_threshold=None,
                          test_stdev=False):
     """ Get a patch from x, with rotation, without having to rotate the
-    whole image.
+    whole image. (Turns out this is really slow)
     
     """
     rows, cols=box_dim
@@ -69,7 +71,6 @@ def sample_with_rotation(x, center, angle,
     x_coords = np.tile(np.arange(cols, dtype=np.float32), rows).reshape(-1)
     y_coords = np.repeat(np.arange(rows, dtype=np.float32), cols).reshape(-1)
     xy_coords = np.dstack((x_coords, y_coords, np.ones_like(x_coords))).transpose((0,2,1))
-    print xy_coords.shape
     new_xy_coords = xy_coords[:,:,:]
     for xform in xforms:
         new_xy_coords = np.dot(xform, new_xy_coords).transpose(1,0,2)
@@ -92,6 +93,14 @@ def sample_with_rotation(x, center, angle,
             sample[orig_y,orig_x] = x[img_row,img_col]
         except IndexError:
             # out-of-bounds, just leave blank
-            #print img_row, img_col
             pass    
-    return sample 
+    return sample
+
+def rescale_array(x, scale_factor=0.25):
+    logger = logging.getLogger(__name__)
+    img = PIL.Image.fromarray(x)
+    new_w = int(x.shape[1] * scale_factor)
+    new_h = int(x.shape[0] * scale_factor)
+    img = img.resize((new_w,new_h),PIL.Image.NEAREST)
+    x = np.array(img.getdata()).reshape(new_h, new_w)
+    return x
