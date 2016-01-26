@@ -1,10 +1,13 @@
+import sys
 import logging
 import PIL
 import h5py
 import numpy as np
 from collections import defaultdict
+sys.path.append("..")
 from minibatcher import MiniBatcher
-from image_manip import sample_with_rotation, rescale_array
+from image_manip import sample_with_rotation
+from viz_tools.array_to_png import rescale_img_array
 
 def zero_one(x, ceiling=255.):
     """ Scale a value to fall between 0 and 1,
@@ -18,12 +21,11 @@ def zero_one(x, ceiling=255.):
         transformed = 1. - x.astype(np.float32)/ceiling
     return transformed
     
-def nmec_pre(x, rng=None):
+def nmec_pre(x, **kwargs):
     # NMEC preaugmentation:
     # scale by 0.5
-    x = rescale_array(x, 0.5)
+    x = rescale_img_array(x, 0.5)
     return x
-
 
 class Hdf5MiniBatcher:
     """ Iterator interface for generating minibatches from 
@@ -35,6 +37,7 @@ class Hdf5MiniBatcher:
             fill_value=255, 
             rng=None,
             preprocess=None,
+            postprocess=None,
             add_rotation=False,
             stdev_threshold=None):
 
@@ -53,7 +56,7 @@ class Hdf5MiniBatcher:
         original_fragment = f[author][form][()]
         
         if preprocess is not None:
-            original_fragment = preprocess(original_fragment)
+            original_fragment = preprocess(original_fragment, rng=rng)
 
         # Pull shingle from the line, until it satisfies constraints
         for i in range(max_tries):
@@ -85,6 +88,8 @@ class Hdf5MiniBatcher:
             logger.debug(shingle_stdev)
             if stdev_threshold is None or shingle_stdev > stdev_threshold:
                 break
+        if postprocess is not None:
+            output_arr = postprocess(output_arr)
         return output_arr
 
     def __init__(self, fname, 
@@ -106,8 +111,9 @@ class Hdf5MiniBatcher:
         fname -- path to HDF5 set
         num_authors -- number of authors to retrieve from HDF5 set
         num_forms_per_author -- number of fragments to retrieve per author
-        preprocess -- function/callable to transform fragments before shingling (must be called in item_getter)
-        postprocess -- function/callable to transform shingles
+        preprocess -- function/callable to transform fragments before shingling (must be called in item_getter);
+            must accept one argument and **kwargs
+        postprocess -- function/callable to transform shingles; accepts one argument and **kwargs
         default_mode -- which set (TRAIN, TEST, VAL) should MiniBatcher return by default?
         shingle_dim=(120,120) -- shingle size (rows, cols)
         batch_size
@@ -149,11 +155,12 @@ class Hdf5MiniBatcher:
                                                                         fill_value=fill_value,
                                                                         rng=self.rng,
                                                                         preprocess=preprocess,
+                                                                        postprocess=postprocess,
                                                                         stdev_threshold=stdev_threshold,
                                                                         add_rotation=add_rotation)
         
         self.batch_size = batch_size
-        m = MiniBatcher(fIn, keys,item_getter=item_getter, postprocess=postprocess,
+        m = MiniBatcher(fIn, keys,item_getter=item_getter,
                         batch_size=self.batch_size, min_fragments=0, 
                         train_pct=train_pct, test_pct=test_pct, val_pct=val_pct,
                         rng_seed=rng_seed)
