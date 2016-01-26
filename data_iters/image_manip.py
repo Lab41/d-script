@@ -69,19 +69,17 @@ def sample_with_rotation(x, center, angle,
     x_coords = np.tile(np.arange(cols, dtype=np.float32), rows).reshape(-1)
     y_coords = np.repeat(np.arange(rows, dtype=np.float32), cols).reshape(-1)
     xy_coords = np.dstack((x_coords, y_coords, np.ones_like(x_coords))).transpose((0,2,1))
+    print xy_coords.shape
     new_xy_coords = xy_coords[:,:,:]
     for xform in xforms:
-        new_xy_coords = np.dot(np.dot(xform, new_xy_coords).transpose(1,0,2)
-    
-    new_xy_coords = np.dot(translation_matrix, xy_coords).transpose(1,0,2)
-    new_xy_coords = np.dot(rotation_matrix, new_xy_coords).transpose(1,0,2)
-    new_xy_coords = np.dot(back_translation_matrix, new_xy_coords)
+        new_xy_coords = np.dot(xform, new_xy_coords).transpose(1,0,2)
+
     new_xy_coords = np.around(new_xy_coords).astype(np.int32)
     
     # sample according to new coordinates
     for i in xrange(new_xy_coords.shape[2]):
         orig_x, orig_y, _ = orig_xy = np.around(xy_coords[0,:,i]).astype(np.int32)
-        sample_x, sample_y, _ = sample_xy = new_xy_coords[:,0,i]
+        sample_x, sample_y, _ = sample_xy = new_xy_coords[0,:,i]
         try:
             img_col = sample_x
             img_row = sample_y
