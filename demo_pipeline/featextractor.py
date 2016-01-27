@@ -1,12 +1,11 @@
 import numpy as np
 import h5py
 import sys
-sys.path.append('../../d-script/')
+sys.path.append('..')
 
 # d-script imports
 from class_icdar_iterator import *
 from data_iters.minibatcher import MiniBatcher
-from data_iters.iam_hdf5_iterator import IAM_MiniBatcher
 from fielutil import verbatimnet, loadparams
 
 # Shingle, horizontal, and vertical step sizes
