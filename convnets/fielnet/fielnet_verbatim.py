@@ -32,7 +32,6 @@ hdf5_file = h5py.File('/fileserver/iam/iam-processed/words/words.hdf5','r')
 author_hdf5_file = h5py.File('/fileserver/iam/iam-processed/words/author_words.hdf5','r')
 
 file_list = hdf5_file.keys()
-num_authors=64
 num_forms_per_author=-1
 shingle_dim=(56,56)
 use_form=True
@@ -101,6 +100,7 @@ def get_batch( author_hdf5_file, author_ids, shingle_size=(120,120), data_size=3
 author_ids = author_list(author_hdf5_file, min_records=num_forms_per_author)
 author_batch, author_truth = get_batch( author_hdf5_file, author_ids )
 num_authors = len(author_ids)
+num_authors = 1000
 shards, authors = get_batch(author_hdf5_file, author_ids)
 shard = shards[0]
 
@@ -170,7 +170,7 @@ if True:
         model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=1, show_accuracy=True, verbose=1) #, validation_data=(X_test, Y_test))
         # model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=1, show_accuracy=True, verbose=1, validation_data=(X_train, Y_train))
         if (batch_iter % 20)==0 and batch_iter != 0:
-            model.save_weights('fielnet-vtrain.hdf5', overwrite=True)
+            model.save_weights('fielnet-1k.hdf5', overwrite=True)
             
-        model.save_weights('fielnet-vtrain.hdf5', overwrite=True)
+        model.save_weights('fielnet-1k.hdf5', overwrite=True)
 
