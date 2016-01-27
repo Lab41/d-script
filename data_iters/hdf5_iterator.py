@@ -6,10 +6,12 @@ import numpy as np
 from collections import defaultdict
 sys.path.append("..")
 from minibatcher import MiniBatcher
-from image_manip import sample_with_rotation
+from image_manip import sample_with_rotation, extract_with_box
 from viz_tools.array_to_png import rescale_img_array
 
-def zero_one(x, ceiling=255.):
+
+# possible pre/post-processing components ##########
+def zero_one(x, ceiling=255., **kwargs):
     """ Scale a value to fall between 0 and 1,
     and reverse it. By default converts byte-valued variables
     (where 255 is absence) to float-valued ones where 0.0
@@ -22,11 +24,32 @@ def zero_one(x, ceiling=255.):
     return transformed
     
 def nmec_pre(x, **kwargs):
-    # NMEC preaugmentation:
-    # scale by 0.5
+    """NMEC preaugmentation: scales input by 0.5"""
     x = rescale_img_array(x, 0.5)
+    
     return x
 
+def noise_for_example(x, extent = 1000, intensity = 0.1, rng=None, **kwargs):
+    """
+    Add noise to x. Just for demonstration.
+    
+    Arguments:
+    extent -- number of points to add noise at
+    intensity -- scale parameter of half-normal distribution; samples
+        from this distribution will be added at each noise location
+    """
+    
+    x = x[:]
+    orig_dtype = x.dtype
+    noise_x = rng.uniform(0, x.shape[1], extent)
+    noise_y = rng.uniform(0, x.shape[0], extent)
+    noise_amount = np.abs(rng.normal(0, intensity, extent))
+    for ns_x, ns_y, amount in zip(noise_x, noise_y, noise_amount):
+        x[ns_y,ns_x] = x[ns_y,ns_x] + amount
+ 
+    return x.astype(orig_dtype)
+
+# Dataset iterator class
 class Hdf5MiniBatcher:
     """ Iterator interface for generating minibatches from 
     'author-fragment' style HDF5 sets of data
@@ -42,8 +65,32 @@ class Hdf5MiniBatcher:
             stdev_threshold=None):
 
         '''
-        Retrieve a line from an iam hdf5 file and shingle into the line
-        NB: shingle_dim is in rows, cols format
+        Example item_getter implementation.
+        Retrieves a fragment from an iam hdf5 file and shingles into it.
+        
+        Arguments:
+        f -- hdf5 Group(/File) object. 
+            Should have format f(File/Grp) > author(Grp) > fragment(Dataset)
+        key -- 2-tuple, in form (author_id, fragment_id). Indexes into f.
+        shingle_dim -- 2-tuple, in form (rows, cols), describing the size of the
+            'shingle' (rectangular sample) to be drawn from the fragment
+        fill_value -- quantity to be used to fill "empty" portions of shingle.
+            filling (ought to) happen after preprocessing and before postprocessing.
+        rng -- numpy RandomState object. All randomization is done from this object,
+            to preserve replicability
+        preprocess -- callable object, accepting at least a positional argument and kwargs;
+            if not None, each fragment is dispatched to preprocess before any shingling.
+            A RandomState object 'rng' may be in kwargs, if randomization is needed
+        postprocess -- callable object, accepting at least a positional argument and kwargs;
+            if not None, each fragment is dispatched to postprocessing just before being
+            returned to the MiniBatcher.
+            A RandomState object 'rng' may be in kwargs, if randomization is needed
+        add_rotation -- boolean: rotate each shingle-sampling box randomly before extracting from
+            a fragment? NB: rotation is currently done with slow python code using alaised linear filtering
+        stdev_threshold -- if not None, try at most max_tries(=30) times to extract a shingle whose
+            standard deviation before postprocessing exceeds this quantity, (implicitly) throwing
+            NameError if a qualifying shingle cannot be found. Useful for returning potentially
+            informative shingles
         '''
         
         # maximum number of times to try and shingle from a document
@@ -51,9 +98,9 @@ class Hdf5MiniBatcher:
         max_tries=30
 
         # Key format is {author:{form:data}}
-        (author, form) = key
+        (author, fragment) = key
         # Extract fragment from HDF5 file
-        original_fragment = f[author][form][()]
+        original_fragment = f[author][fragment][()]
         
         if preprocess is not None:
             original_fragment = preprocess(original_fragment, rng=rng)
@@ -70,17 +117,21 @@ class Hdf5MiniBatcher:
                 rotate_angle = rng.normal(0, 0.125)
             else:
                 rotate_angle = 0
-            try:
-                test_stdev = stdev_threshold is not None
+     
+            test_stdev = stdev_threshold is not None
+            if rotate_angle != 0:
                 output_arr=sample_with_rotation(original_fragment, (x_sample, y_sample), 
                                            rotate_angle,
                                            wraparound=False,
                                            stdev_threshold=stdev_threshold,
-                                           test_stdev=test_stdev)
-            except ValueError as e:
+                                           test_stdev=test_stdev,
+                                           fill_value=fill_value)
+                if output_arr is None:
+                    continue
+            else:
                 logger=logging.getLogger(__name__)
-                logger.debug('Sample SD too low?', exc_info=True)
-                continue
+                logger.debug("Using box")
+                output_arr=extract_with_box(original_fragment, (x_sample, y_sample), fill_value=fill_value)
             
             
             shingle_stdev=np.std(output_arr)
@@ -89,7 +140,7 @@ class Hdf5MiniBatcher:
             if stdev_threshold is None or shingle_stdev > stdev_threshold:
                 break
         if postprocess is not None:
-            output_arr = postprocess(output_arr)
+            output_arr = postprocess(output_arr, rng=rng)
         return output_arr
 
     def __init__(self, fname, 
