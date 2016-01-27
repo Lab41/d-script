@@ -29,7 +29,7 @@ def sample_with_rotation(x, center, angle,
             b = img_rows
         sample_stdev = np.std(x[t:b, l:r])
         if sample_stdev < stdev_threshold:
-            raise ValueError
+            return None
         
     
     # subtract half box width and height from translation vector to center it on sampling point
@@ -95,3 +95,49 @@ def sample_with_rotation(x, center, angle,
             pass    
     return sample
 
+def extract_with_box(x, center,
+                    box_dim=(120,120), 
+                    fill_value=255):
+    rows, cols=box_dim
+    img_rows, img_cols = x.shape    
+
+    l,b,r,t = sample_bounds = center[0] - cols/2, \
+                        center[1] + rows/2, \
+                        center[0] + cols/2, \
+                        center[1] - rows/2
+    pad_t = pad_l = pad_b = pad_r = 0
+    if t < 0:
+        pad_t = -t
+        t = 0
+    if l < 0:
+        pad_l = -l
+        l = 0
+    if r > img_cols:
+        pad_r = r-img_cols
+        r = img_cols
+    if b > img_rows:
+        pad_b = b-img_rows
+        b = img_rows
+        
+    # extract
+    output = x[t:b, l:r]
+    # pad if needed
+    if pad_l:
+        left_padding = np.ones((output.shape[0],pad_l)) * fill_value
+        output = np.concatenate((left_padding,output), axis=1)
+    if pad_r:    
+        right_padding = np.ones((output.shape[0],pad_r)) * fill_value
+        output = np.concatenate((output,right_padding), axis=1)
+    if pad_t:
+        top_padding = np.ones((pad_t, output.shape[1])) * fill_value
+        output = np.concatenate((top_padding,output), axis=0)
+    if pad_b:
+        bottom_padding = np.ones((pad_b, output.shape[1])) * fill_value
+        output = np.concatenate((output,bottom_padding), axis=0)
+    output=output.astype(x.dtype)
+    return output
+    
+    
+    
+    
+        
