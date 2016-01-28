@@ -6,7 +6,7 @@ class MiniBatcher:
     TRAIN = 0
     TEST = 1
     VAL = 2
-    def __init__(self, hdf5_file, input_keys, item_getter, normalize=None,
+    def __init__(self, hdf5_file, input_keys, item_getter,
                  batch_size=32, min_fragments=3, 
                  train_pct=.7, test_pct=.2, val_pct=.1, rng_seed=888):
         """
@@ -21,8 +21,6 @@ class MiniBatcher:
                 an object supporting indexing and the index used
                 to index into it. Should return the item in the 
                 first argument referred to by the second argument
-            normalize -- Can be None; if not, a 1-argument function object
-                which will called on every item in the dataset 
             batch_size -- mini-batch size
             min_fragments -- for each author, what is
                 the minimum number of fragments required to be included?
@@ -36,8 +34,6 @@ class MiniBatcher:
         self.batch_size = batch_size
         self.min_fragments = min_fragments
 
-        self.normalize = normalize
-        #self.getter_kwargs = getter_kwargs
 
         if round(1e6*(train_pct + test_pct + val_pct))!= 1e6:
             raise ValueError('Train(%f)+ Test(%f) + Validation(%f) set percentatages must add to 1.0' %(train_pct,test_pct,val_pct))
@@ -135,9 +131,6 @@ class MiniBatcher:
             top_ind = self.name_2_id[top_key]
 
             data = self.item_getter(self.fIn, key)
-
-            if self.normalize:
-                data = self.normalize(data)
 
             if batch_data is None:
                 data_shape = data.shape

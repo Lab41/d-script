@@ -1,11 +1,17 @@
+import sys
 import logging
 import PIL
 import h5py
 import numpy as np
 from collections import defaultdict
+sys.path.append("..")
 from minibatcher import MiniBatcher
+from image_manip import sample_with_rotation, extract_with_box
+from viz_tools.array_to_png import rescale_img_array
 
-def zero_one(x, ceiling=255.):
+
+# possible pre/post-processing components ##########
+def zero_one(x, ceiling=255., **kwargs):
     """ Scale a value to fall between 0 and 1,
     and reverse it. By default converts byte-valued variables
     (where 255 is absence) to float-valued ones where 0.0
@@ -16,19 +22,34 @@ def zero_one(x, ceiling=255.):
     except TypeError:
         transformed = 1. - x.astype(np.float32)/ceiling
     return transformed
-
-def rescale_array(x, scale_factor=0.25):
-    logger = logging.getLogger(__name__)
-    logger.debug(x.shape)
-    img = PIL.Image.fromarray(x)
-    new_w = int(x.shape[1] * scale_factor)
-    new_h = int(x.shape[0] * scale_factor)
-    img = img.resize((new_w,new_h),PIL.Image.NEAREST)
-    x = np.array(img.getdata()).reshape(new_h, new_w)
-    logger.debug(x.shape)
+    
+def nmec_pre(x, **kwargs):
+    """NMEC preaugmentation: scales input by 0.5"""
+    x = rescale_img_array(x, 0.5)
+    
     return x
+
+def noise_for_example(x, extent = 1000, intensity = 0.1, rng=None, **kwargs):
+    """
+    Add noise to x. Just for demonstration.
     
+    Arguments:
+    extent -- number of points to add noise at
+    intensity -- scale parameter of half-normal distribution; samples
+        from this distribution will be added at each noise location
+    """
     
+    x = x[:]
+    orig_dtype = x.dtype
+    noise_x = rng.uniform(0, x.shape[1], extent)
+    noise_y = rng.uniform(0, x.shape[0], extent)
+    noise_amount = np.abs(rng.normal(0, intensity, extent))
+    for ns_x, ns_y, amount in zip(noise_x, noise_y, noise_amount):
+        x[ns_y,ns_x] = x[ns_y,ns_x] + amount
+ 
+    return x.astype(orig_dtype)
+
+# Dataset iterator class
 class Hdf5MiniBatcher:
     """ Iterator interface for generating minibatches from 
     'author-fragment' style HDF5 sets of data
@@ -37,63 +58,113 @@ class Hdf5MiniBatcher:
     @staticmethod
     def shingle_item_getter(f, key, shingle_dim=(120,120), 
             fill_value=255, 
-            rng=None, 
-            scale_factor=None,
-            std_threshold=None):
+            rng=None,
+            preprocess=None,
+            postprocess=None,
+            add_rotation=False,
+            stdev_threshold=None):
 
         '''
-        Retrieve a line from an iam hdf5 file and shingle into the line
-        NB: shingle_dim is in rows, cols format
+        Example item_getter implementation.
+        Retrieves a fragment from an iam hdf5 file and shingles into it.
+        
+        Arguments:
+        f -- hdf5 Group(/File) object. 
+            Should have format f(File/Grp) > author(Grp) > fragment(Dataset)
+        key -- 2-tuple, in form (author_id, fragment_id). Indexes into f.
+        shingle_dim -- 2-tuple, in form (rows, cols), describing the size of the
+            'shingle' (rectangular sample) to be drawn from the fragment
+        fill_value -- quantity to be used to fill "empty" portions of shingle.
+            filling (ought to) happen after preprocessing and before postprocessing.
+        rng -- numpy RandomState object. All randomization is done from this object,
+            to preserve replicability
+        preprocess -- callable object, accepting at least a positional argument and kwargs;
+            if not None, each fragment is dispatched to preprocess before any shingling.
+            A RandomState object 'rng' may be in kwargs, if randomization is needed
+        postprocess -- callable object, accepting at least a positional argument and kwargs;
+            if not None, each fragment is dispatched to postprocessing just before being
+            returned to the MiniBatcher.
+            A RandomState object 'rng' may be in kwargs, if randomization is needed
+        add_rotation -- boolean: rotate each shingle-sampling box randomly before extracting from
+            a fragment? NB: rotation is currently done with slow python code using alaised linear filtering
+        stdev_threshold -- if not None, try at most max_tries(=30) times to extract a shingle whose
+            standard deviation before postprocessing exceeds this quantity, (implicitly) throwing
+            NameError if a qualifying shingle cannot be found. Useful for returning potentially
+            informative shingles
         '''
+        
+        # maximum number of times to try and shingle from a document
+        # before failing
+        max_tries=30
 
         # Key format is {author:{form:data}}
-        (author, form) = key
+        (author, fragment) = key
         # Extract fragment from HDF5 file
-        original_fragment = f[author][form]
+        original_fragment = f[author][fragment][()]
         
-        # Rescale if necessary
-        if scale_factor is not None:
-            original_fragment = rescale_array(original_fragment[()], scale_factor)
+        if preprocess is not None:
+            original_fragment = preprocess(original_fragment, rng=rng)
 
         # Pull shingle from the line, until it satisfies constraints
-        while True:
+        for i in range(max_tries):
             (height, width) = original_fragment.shape
-            max_x = max(width - shingle_dim[1], 1)
-            max_y = max(height - shingle_dim[0], 1)
-            x_start = rng.randint(0, max_x)
-            y_start = rng.randint(0, max_y)
             shingle_height, shingle_width = shingle_dim
 
-            # check if the line is too small on at least one axis
-            if width < shingle_width:
-                x_slice = slice(0,width)
+            x_sample = rng.randint(0, width)
+            y_sample = rng.randint(0, height)
+            
+            if add_rotation:
+                rotate_angle = rng.normal(0, 0.125)
             else:
-                x_slice = slice(x_start, x_start+shingle_width)
-            if  height < shingle_height: 
-                y_slice = slice(0,height)
+                rotate_angle = 0
+     
+            test_stdev = stdev_threshold is not None
+            if rotate_angle != 0:
+                output_arr=sample_with_rotation(original_fragment, (x_sample, y_sample), 
+                                           rotate_angle,
+                                           wraparound=False,
+                                           stdev_threshold=stdev_threshold,
+                                           test_stdev=test_stdev,
+                                           fill_value=fill_value)
+                if output_arr is None:
+                    continue
             else:
-                y_slice = slice(y_start, y_start+shingle_height)
-            slice_width = x_slice.stop - x_slice.start
-            slice_height = y_slice.stop - y_slice.start
-            # create an output shingle, copy our thing onto it
-            output_arr = np.zeros(shingle_dim)
-            output_arr.fill(fill_value)
-            output_arr[:slice_height,:slice_width] = original_fragment[y_slice, x_slice]
-            shingle_std=np.std(output_arr)
+                logger=logging.getLogger(__name__)
+                logger.debug("Using box")
+                output_arr=extract_with_box(original_fragment, (x_sample, y_sample), fill_value=fill_value)
+            
+            
+            shingle_stdev=np.std(output_arr)
             logger=logging.getLogger(__name__)
-            logger.debug(shingle_std)
-            if std_threshold is None or shingle_std > std_threshold:
+            logger.debug(shingle_stdev)
+            if stdev_threshold is None or shingle_stdev > stdev_threshold:
                 break
+        if postprocess is not None:
+            output_arr = postprocess(output_arr, rng=rng)
         return output_arr
 
-    def __init__(self, fname, num_authors, num_forms_per_author, normalize=zero_one, default_mode=MiniBatcher.TRAIN, shingle_dim=(120,120), batch_size=32, train_pct=.7, test_pct=.2, val_pct=.1, rng_seed=888, fill_value=255,
-                scale_factor=None,std_threshold=None):
+    def __init__(self, fname, 
+                 num_authors, 
+                 num_forms_per_author,
+                 preprocess=None,
+                 postprocess=zero_one, 
+                 default_mode=MiniBatcher.TRAIN, 
+                 shingle_dim=(120,120), 
+                 batch_size=32, 
+                 train_pct=.7, test_pct=.2, val_pct=.1, 
+                 rng_seed=888, 
+                 fill_value=255,
+                 scale_factor=None,
+                 stdev_threshold=None,
+                 add_rotation=False):
         """
         Arguments
         fname -- path to HDF5 set
         num_authors -- number of authors to retrieve from HDF5 set
         num_forms_per_author -- number of fragments to retrieve per author
-        normalize -- function/callable to normalize shingles in each fragment,
+        preprocess -- function/callable to transform fragments before shingling (must be called in item_getter);
+            must accept one argument and **kwargs
+        postprocess -- function/callable to transform shingles; accepts one argument and **kwargs
         default_mode -- which set (TRAIN, TEST, VAL) should MiniBatcher return by default?
         shingle_dim=(120,120) -- shingle size (rows, cols)
         batch_size
@@ -102,12 +173,11 @@ class Hdf5MiniBatcher:
             random number generator
         fill_value -- what value counts as blank, in case padding needs to be carried out?
         scale_factor -- scale fragments by this much before shingling
-        std_threshold -- yield only shingles above this standard deviation, in unnormalized units
+        stdev_threshold -- yield only shingles above this standard deviation, in unnormalized units
+        add_rotation -- boolean, randomly sample an angle (between -0.125 and 0.125 radians) to rotate shingles by?
         """
         
         self.rng = np.random.RandomState(rng_seed)
-        logger = logging.getLogger(__name__)
-        logger.debug(self.rng.rand())
         self.hdf5_file = fname
 
         fIn = h5py.File(self.hdf5_file, 'r')
@@ -127,23 +197,21 @@ class Hdf5MiniBatcher:
             forms = list(fIn[author])
             for form in forms[:num_forms_per_author]: # Limit us to num_form_per_author
                 keys.append((author, form))
-                # Original hierarchy with "use_form" option:
-                # for line_name in fIn[author][form].keys():
-                #     for shingle in range(fIn[author][form][line_name].shape[0]):
-                #         keys.append((author,form,line_name))
 
         # Remove duplicates to prevent test/val contamination
         keys = list(set(keys))
 
         item_getter = lambda f, key: Hdf5MiniBatcher.shingle_item_getter(f, key,
-                                                                         shingle_dim=(120, 120),
-                                                                         fill_value=255,
-                                                                         rng=self.rng,
-                                                                         scale_factor=scale_factor,
-                                                                         std_threshold=std_threshold)
+                                                                        shingle_dim=shingle_dim,
+                                                                        fill_value=fill_value,
+                                                                        rng=self.rng,
+                                                                        preprocess=preprocess,
+                                                                        postprocess=postprocess,
+                                                                        stdev_threshold=stdev_threshold,
+                                                                        add_rotation=add_rotation)
         
         self.batch_size = batch_size
-        m = MiniBatcher(fIn, keys,item_getter=item_getter, normalize=normalize,
+        m = MiniBatcher(fIn, keys,item_getter=item_getter,
                         batch_size=self.batch_size, min_fragments=0, 
                         train_pct=train_pct, test_pct=test_pct, val_pct=val_pct,
                         rng_seed=rng_seed)
@@ -192,7 +260,7 @@ def main():
     logging.basicConfig(level=options.log_level)
     shingle_dim = map(int, options.shingle_dim.split(','))
 
-    iam_m = IAM_MiniBatcher(options.filename, options.num_authors, options.num_forms_per_author,
+    iam_m = Hdf5MiniBatcher(options.filename, options.num_authors, options.num_forms_per_author,
                             shingle_dim=shingle_dim, default_mode=MiniBatcher.TRAIN,
                             batch_size=options.batch_size)
 
