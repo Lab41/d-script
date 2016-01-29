@@ -152,7 +152,7 @@ def tfdnet( hdf5file, layer='softmax', compile=False ):
     return model
 
     
-def verbatimnet( layer='softmax', compile=False ):
+def verbatimnet( layer='softmax', compiling=False ):
     
     layers = ['conv1', 'conv2', 'conv3', 'conv4', 'conv5',
               'fc6', 'fc7', 'softmax']
@@ -191,7 +191,7 @@ def verbatimnet( layer='softmax', compile=False ):
         model.add(Dense(num_authors))
         model.add(Activation('softmax'))
     
-    if compile:
+    if compiling:
         print "Compiling model"
         sgd = SGD(lr=lr, decay=1e-6, momentum=0.9, nesterov=True)
         model.compile(loss='categorical_crossentropy', optimizer=sgd)
@@ -213,13 +213,12 @@ def loadparams( model, hdf5file ):
     params.close()
     
     
-def load_verbatimnet( layer, paramsfile = '/fileserver/iam/iam-processed/models/fiel_1k.hdf5' ):
+def load_verbatimnet( layer, paramsfile = '/fileserver/iam/iam-processed/models/fiel_1k.hdf5', compiling=False ):
 
     print "Establishing Fiel's verbatim network"
-    vnet = verbatimnet(layer)
+    vnet = verbatimnet(layer,compiling=compiling)
     loadparams( vnet, paramsfile )
-    vnet.compile( loss='mse', optimizer='sgd' )
-    print "Compiled neural network up to FC7 layer"    
+    print "Loaded neural network up to "+layer+" layer"    
     
     return vnet
 
