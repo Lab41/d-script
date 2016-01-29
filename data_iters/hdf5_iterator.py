@@ -1,5 +1,6 @@
 import sys
 import logging
+import time
 import PIL
 import h5py
 import numpy as np
@@ -96,15 +97,19 @@ class Hdf5MiniBatcher:
         # maximum number of times to try and shingle from a document
         # before failing
         max_tries=30
+        logger = logging.getLogger(__name__)
 
         # Key format is {author:{form:data}}
         (author, fragment) = key
         # Extract fragment from HDF5 file
+        t_alpha = time.clock()
         original_fragment = f[author][fragment][()]
-        
+        t_omega = time.clock()
+        logger.debug("Getter time: {0}".format(t_omega-t_alpha))
+
         if preprocess is not None:
             original_fragment = preprocess(original_fragment, rng=rng)
-
+            
         # Pull shingle from the line, until it satisfies constraints
         for i in range(max_tries):
             (height, width) = original_fragment.shape
@@ -126,8 +131,10 @@ class Hdf5MiniBatcher:
                                            stdev_threshold=stdev_threshold,
                                            test_stdev=test_stdev,
                                            fill_value=fill_value)
+                
                 if output_arr is None:
                     continue
+ 
             else:
                 logger=logging.getLogger(__name__)
                 logger.debug("Using box")
@@ -136,11 +143,15 @@ class Hdf5MiniBatcher:
             
             shingle_stdev=np.std(output_arr)
             logger=logging.getLogger(__name__)
-            logger.debug(shingle_stdev)
+            logger.debug("Shingle SD: {0}".format(shingle_stdev))
+
             if stdev_threshold is None or shingle_stdev > stdev_threshold:
                 break
+            
         if postprocess is not None:
             output_arr = postprocess(output_arr, rng=rng)
+
+        assert output_arr is not None
         return output_arr
 
     def __init__(self, fname, 
