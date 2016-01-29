@@ -140,7 +140,9 @@ class Hdf5MiniBatcher:
             else:
                 logger=logging.getLogger(__name__)
                 logger.debug("Using box")
-                output_arr=extract_with_box(original_fragment, (x_sample, y_sample), fill_value=fill_value)
+                output_arr=extract_with_box(original_fragment, 
+                                            center=(x_sample, y_sample), box_dim=shingle_dim, 
+                                            fill_value=fill_value)
             
             
             shingle_stdev=np.std(output_arr)
@@ -150,10 +152,11 @@ class Hdf5MiniBatcher:
             if stdev_threshold is None or shingle_stdev > stdev_threshold:
                 break
             
+        assert output_arr is not None
+        
         if postprocess is not None:
             output_arr = postprocess(output_arr, rng=rng)
 
-        assert output_arr is not None
         return output_arr
 
     def __init__(self, fname, 
