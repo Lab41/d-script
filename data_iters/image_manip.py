@@ -2,7 +2,7 @@ import numpy as np
 import logging
 
 def sample_with_rotation(x, center, angle, 
-                         box_dim=(120,120), 
+                         box_dim, 
                          fill_value=255, 
                          wraparound=True,
                          stdev_threshold=None,

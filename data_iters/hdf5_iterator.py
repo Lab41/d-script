@@ -98,6 +98,7 @@ class Hdf5MiniBatcher:
         # before failing
         max_tries=30
         logger = logging.getLogger(__name__)
+        logger.debug("Shingle dim: {0}".format(shingle_dim))
 
         # Key format is {author:{form:data}}
         (author, fragment) = key
@@ -125,8 +126,9 @@ class Hdf5MiniBatcher:
      
             test_stdev = stdev_threshold is not None
             if rotate_angle != 0:
-                output_arr=sample_with_rotation(original_fragment, (x_sample, y_sample), 
-                                           rotate_angle,
+                output_arr=sample_with_rotation(original_fragment, center=(x_sample, y_sample), 
+                                           angle=rotate_angle,
+                                           box_dim=shingle_dim,
                                            wraparound=False,
                                            stdev_threshold=stdev_threshold,
                                            test_stdev=test_stdev,
