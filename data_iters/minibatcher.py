@@ -1,4 +1,5 @@
 import logging
+
 import numpy as np
 from collections import defaultdict
 
@@ -131,6 +132,7 @@ class MiniBatcher:
             top_ind = self.name_2_id[top_key]
 
             data = self.item_getter(self.fIn, key)
+            logger = logging.getLogger(__name__)
 
             if batch_data is None:
                 data_shape = data.shape
