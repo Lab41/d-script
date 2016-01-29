@@ -96,7 +96,7 @@ def sample_with_rotation(x, center, angle,
     return sample
 
 def extract_with_box(x, center,
-                    box_dim=(120,120), 
+                    box_dim, 
                     fill_value=255):
     rows, cols=box_dim
     img_rows, img_cols = x.shape    
