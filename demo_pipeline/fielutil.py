@@ -17,10 +17,10 @@ from keras.layers.normalization import BatchNormalization as BN
 
 import matplotlib.pylab as plt
 import sys
-sys.path.append('../../d-script/')
+sys.path.append('..')
 # d-script imports
 from data_iters.minibatcher import MiniBatcher
-from data_iters.iam_hdf5_iterator import IAM_MiniBatcher
+# from data_iters.hdf5_iterator import IAM_MiniBatcher
 from class_icdar_iterator import *
 
 
