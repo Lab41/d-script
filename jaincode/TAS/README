@@ -1,0 +1,22 @@
+*Requires 64-bit Linux 6.2 or similar to run
+*Assumes binarized, 1 bit input similar to the example dataset
+
+Features Extraction:
+Usage: ./GetTASFeatures [image] [output feature file]
+
+Feature Comparison
+Usage: ./CompareFeatures [file1] [file2] [output scorefile]
+
+Example output and scores are given in the examples dir to verify that the code is working as expected.
+./GetTASFeatures ../example_input/027_1.tif example_output/027_1.tif.fea
+./GetTASFeatures ../example_input/027_2.tif example_output/027_2.tif.fea
+./CompareFeatures example_output/027_1.tif.fea example_output/027_2.tif.fea example_output/027_score 
+
+score file should read:
+0.0490867
+
+Description:
+K-adjacent segment (KAS) features are used in a bag-of-features (BOF) framework to model a user’s handwriting. A BOF model is used to compare the writers from two documents by converting the KAS features extracted from a document into a histogram of code words. 
+Once a codebook is constructed, the source document is represented by a histogram of KAS “code words” present in the document. This histogram is normalized to sum up to one so that the histogram is invariant to the size of the input. The two histograms are compared using their Euclidean distance.
+
+
