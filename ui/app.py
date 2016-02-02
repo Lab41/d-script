@@ -13,22 +13,24 @@ urls = (
     "/rest/static/(.*)", "static_data",
     "/rest/similarity/(author|fragment)/(.*)", "similarity",
     "/rest/classification/(.*)", "classification",
+    "/rest/process", "process",
     # front-end routes to load angular app
-    "/(.*)", "www",
-    "/#(.*)", "index",
-    "/", "index"
+    "/", "index",
+    "/(.+)", "www"
 )
 
 class www:
     def GET(self, filename):
         try:
             f = open('www/' + filename)
+            if filename.endswith(".css"):
+                web.header("Content-Type","text/css")
             return f.read() # or return f.read() if you're using 0.3
         except IOError: # No file named that
             web.notfound()
             
 class index:
-    def GET(self, filename):
+    def GET(self):
         try:
             f = open("www/index.html")
             return f.read()
@@ -169,6 +171,54 @@ class static_data:
             return f.read()
         except IOError:
             web.notfound()
+            
+class process:
+    def GET(self):
+        
+        data = [
+            {
+                "name": "step 1",
+                "url": "step-1"
+            },
+            {
+                "name": "step 2",
+                "url": "step-2"
+            },
+            {
+                "name": "step 3",
+                "url": "step-3"
+            },
+            {
+                "name": "corpus clustering",
+                "url": "step-4"
+            },
+            {
+                "name": "feature extraction",
+                "url": "step-5"
+            },
+            {
+                "name": "author identification",
+                "url": "step-6"
+            },
+            {
+                "name": "step 7",
+                "url": "step-7"
+            },
+            {
+                "name": "step 8",
+                "url": "step-8"
+            },
+            {
+                "name": "step 9",
+                "url": "step-9"
+            },
+            {
+                "name": "step 10",
+                "url": "step-10"
+            }
+        ];
+        
+        return json.dumps(data);
         
 app = web.application(urls, globals())
     

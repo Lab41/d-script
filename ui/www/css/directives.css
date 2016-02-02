@@ -1,0 +1,98 @@
+@charset "UTF-8";
+/* CSS Document */
+
+/*************************************** directives STYLE ***************************************/
+
+/* Use this style sheet for highest directives specific styling. */
+
+/* !IMPORTS
+/* !GLOBALS
+/* !CUSTOM
+/* --- !content-slider
+
+/******************************* !IMPORTS *******************************/
+
+/******************************* !GLOBALS *******************************/
+
+/******************************* !CUSTOM *******************************/
+
+/*************************/
+/**** !content-slider ****/
+/*************************/
+
+/* arrow */
+content-slider nav a {
+    
+	cursor: pointer;
+    fill: currentColor;
+    opacity: 0.2;
+	outline: none;
+	padding: 1em;
+    position: absolute;
+    bottom: 3em;
+    transition: 0.2s linear all;
+    
+}
+
+/* previous arrow */
+content-slider nav a:first-child {
+    
+    left: 1em;
+    
+    -webkit-transform: rotate(-90deg);
+    -moz-transform: rotate(-90deg);
+    -ms-transform: rotate(-90deg);
+    -o-transform: rotate(-90deg);
+    transform: rotate(-90deg);
+    
+}
+
+/* next arrow */
+content-slider nav a:last-child {
+    
+    right: 1em;
+    
+    -webkit-transform: rotate(90deg);
+    -moz-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+    -o-transform: rotate(90deg);
+    transform: rotate(90deg);
+    
+}
+
+/* arrow hover */
+content-slider nav a:hover {
+    
+	opacity: 1;
+	
+}
+
+/* slider */
+content-slider section {
+    
+    height: 100vh;
+    left: 0;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    
+}
+
+/* individual slide */
+content-slider section div {
+    
+    /*height: 100%;*/
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 0;
+    width: auto;
+    /*width: 100%;
+    
+    /*background-position: 50% 50%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: 100%;*/
+
+}
