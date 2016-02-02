@@ -34,32 +34,6 @@ def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20) ):
     # Loop through all the images in the HDF5 file
     for imname in hdf5file.keys():
         img = 1.0 - hdf5file[imname].value /255.0 
-        shards = np.zeros( (0, 1, shingle_dims[0], shingle_dims[1]) )
-
-        # Collect the inputs for the image
-        for shard in StepShingler(img, hstep=steps[1], vstep=steps[0], shingle_size=shingle_dims):    
-            shard = np.expand_dims(np.expand_dims(shard, 0),0)
-            shards = np.concatenate( (shards, shard) )
-        print "Loaded %d shards in and predicting on image %s" %(len(shards), imname)
-        sys.stdout.flush()
-
-        # Predict the neural network and append the mean of features to overall imfeatures
-        features = network.predict( shards, verbose=1 )
-        imfeatures = np.concatenate( (imfeatures, np.expand_dims(features.mean(axis=0),0)) )
-        
-    return imfeatures
-
-def extract_imfeats_debug( hdf5name, network, shingle_dims=(56,56), steps=(20,20) ):
-
-    # Image files
-    hdf5file=h5py.File(hdf5name)
-
-    # Final output of neural network
-    imfeatures = np.zeros( (0,4096) )
-
-    # Loop through all the images in the HDF5 file
-    for imname in hdf5file.keys():
-        img = 1.0 - hdf5file[imname].value /255.0 
         # shards = np.zeros( (0, 1, shingle_dims[0], shingle_dims[1]) )
         shards = []
 

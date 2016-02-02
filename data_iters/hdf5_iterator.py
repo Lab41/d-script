@@ -113,6 +113,11 @@ class Hdf5MiniBatcher:
             
         # Pull shingle from the line, until it satisfies constraints
         for i in range(max_tries):
+            
+            ## Pat and Karl are hacking!
+            if not original_fragment.shape == 2:
+                original_fragment = np.zeros((shingle_dim))
+                
             (height, width) = original_fragment.shape
             shingle_height, shingle_width = shingle_dim
 

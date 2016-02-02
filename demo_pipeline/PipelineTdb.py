@@ -16,10 +16,21 @@ from featextractor import extract_imfeats_debug
 
 from data_iters.archive.iam_iterator import IAM_MiniBatcher
 
-def PipelineTdb():
+from PIL import Image
+def randangle(im, rng=np.random):
+    newbatch = np.zeros(im.shape)
+    # for i,im in enumerate(batch):
+    #     imangle = np.asarray(Image.fromarray(im.squeeze()).rotate(7.5*rng.randn()))
+    #     newbatch[i]=imangle
+    imangle = np.asarray(Image.fromarray(im.squeeze()).rotate(7.5*rng.randn()))
+    newbatch = imangle
+    return imangle
+
+# def PipelineTdb():
+if True:
     
     # Which training dataset do we want to train from?
-    train_dataset='iam-words'
+    train_dataset='nmec'
 
     # Do you want to load the features in? Or save them to a file?
     load_features = False
@@ -27,6 +38,7 @@ def PipelineTdb():
     # All the images that you require extraction should be in this HDF5 file
     if train_dataset=='nmec':
         hdf5authors='/memory/nmec_scaled_author_form.hdf5'
+        hdf5authors='/fileserver/nmec-handwriting/nmec_scaled_author_form.hdf5'
         hdf5images='nmecdata/nmec_scaled_flat.hdf5'
     elif train_dataset=='iam-words':
         hdf5authors='/fileserver/iam/iam-processed/words/author_words.hdf5'
@@ -50,14 +62,15 @@ def PipelineTdb():
     num_authors=len(labels)
     num_forms_per_author=-1
     shingle_dim=(56,56)
-    batch_size=32
-    load_size=batch_size*1000
+    batch_size=320
+    load_size=batch_size*1
     iterations = 1000
     lr = 0.001
 
 
     # ### Define your model
     # 
+if False:
     # Here, we're using the Fiel Network
     vnet = load_verbatimnet( 'fc7', paramsfile=paramsfile, compiling=False )
     vnet.add(Dense(num_authors))
@@ -66,13 +79,13 @@ def PipelineTdb():
     vnet.compile(loss='categorical_crossentropy', optimizer=sgd)
     print "Finished compilation"
 
-
+if True:
     # ### Minibatcher (to load in your data for each batch)
     # logging.getLogger('data_iters.hdf5_iterator').setLevel(logging.DEBUG)
     if True:
-        mini_m = Hdf5MiniBatcher(hdf5authors, num_authors, num_forms_per_author,
+        mini_m = Hdf5MiniBatcher(hdf5authors, num_authors, num_forms_per_author, preprocess=None,
                                 shingle_dim=shingle_dim, default_mode=MiniBatcher.TRAIN,
-                                batch_size=load_size, add_rotation=True)
+                                batch_size=load_size, add_rotation=False)
     else:
         mini_m = IAM_MiniBatcher(hdf5authors, num_authors, num_forms_per_author,
                                 shingle_dim=shingle_dim, default_mode=MiniBatcher.TRAIN,
@@ -82,7 +95,7 @@ def PipelineTdb():
     # ### Train your model for however many specified iterations
 
     # logging.getLogger('data_iters.hdf5_iterator').setLevel(logging.DEBUG)
-    for batch_iter in range(1):
+    for batch_iter in range(100):
         (X_train,Y_train) = mini_m.get_train_batch()
         # X_train = 1.0 - X_train / 255.0
         X_train = np.expand_dims(X_train, 1)
