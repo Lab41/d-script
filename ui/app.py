@@ -178,43 +178,53 @@ class process:
         data = [
             {
                 "name": "step 1",
-                "url": "step-1"
+                "url": "step-1",
+                "percent": 20
             },
             {
                 "name": "step 2",
-                "url": "step-2"
+                "url": "step-2",
+                "percent": 47
             },
             {
                 "name": "step 3",
-                "url": "step-3"
+                "url": "step-3",
+                "percent": 62
             },
             {
                 "name": "corpus clustering",
-                "url": "step-4"
+                "url": "step-4",
+                "percent": 71
             },
             {
                 "name": "feature extraction",
-                "url": "step-5"
+                "url": "step-5",
+                "percent": 85
             },
             {
                 "name": "author identification",
-                "url": "step-6"
+                "url": "step-6",
+                "percent": 33
             },
             {
                 "name": "step 7",
-                "url": "step-7"
+                "url": "step-7",
+                "percent": 21
             },
             {
                 "name": "step 8",
-                "url": "step-8"
+                "url": "step-8",
+                "percent": 5
             },
             {
                 "name": "step 9",
-                "url": "step-9"
+                "url": "step-9",
+                "percent": 32
             },
             {
                 "name": "step 10",
-                "url": "step-10"
+                "url": "step-10",
+                "percent": 11
             }
         ];
         

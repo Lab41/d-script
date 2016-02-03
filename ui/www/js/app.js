@@ -42,8 +42,8 @@ app.config(function($stateProvider, $urlRouterProvider) {
             return $http.get("templates/steps/" + $stateParams.step + ".html").then(function(template) {
                 return template.data;
             });
-        }/*,
-        controller: "stepCtrl"*/
+        },
+        controller: "stepCtrl"
     })
 
     $urlRouterProvider.otherwise("/step-1");

@@ -36,6 +36,7 @@ main {
 /* device mode toggle */
 .presentation-mode {
 
+    font-size: 0.7em;
     padding: 0.5em;
     position: absolute;
     right: 2em;

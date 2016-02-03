@@ -6,10 +6,8 @@ angular.module("sticky-nodes-directive", [])
 		scope: {
 			vizData: "=",
             canvasWidth: "=",
-            canvasHeight: "=",
-			title: "="
+            canvasHeight: "="
 		},
-		template: "<p>{{ title }}</p>",
 		link: function(scope, element, attrs) {
 			
 			// get d3 promise
@@ -19,13 +17,13 @@ angular.module("sticky-nodes-directive", [])
                 // if not attributes present - use default
 				var width = parseInt(attrs.canvasWidth) || 700;
                 var height = parseInt(attrs.canvasHeight) || width;
-                var radius = 10;
+                var radius = 5;
                 var diameter = radius * 2;
 				var color = ["orange", "teal", "grey", "#5ba819"];
 				
 				var force = d3.layout.force()
-					.charge(-10)
-                    .linkDistance(260)
+					.charge(-20)
+                    .linkDistance(200)
                     .size([(width - diameter), (height - diameter)]);
                 
                 var svg = d3.select(element[0])
@@ -33,6 +31,10 @@ angular.module("sticky-nodes-directive", [])
                     .attr({
                         viewBox: "0 0 " + width + " " + height
                     });
+                
+                var nodes = d3.range(100).map(function(i) {
+                  return {index: i};
+                });
                 
                 // bind data
                 scope.$watch("vizData", function(newData, oldData) {
@@ -59,7 +61,7 @@ angular.module("sticky-nodes-directive", [])
                             
                             force
 							  .nodes(data.nodes)
-							  .links(data.links)
+							  //.links(data.links)
                                 .on("tick", tick)
 							  .start();
                             
@@ -76,7 +78,7 @@ angular.module("sticky-nodes-directive", [])
                             // events
                             node
                                 .on({
-                                click: function(d) {
+                                click: function(d) {cluster();
                                     
                                     // make node active
                                     // figure out how to make element work with SVG
@@ -116,44 +118,6 @@ angular.module("sticky-nodes-directive", [])
                                             .text(d.id);
                                         
                                     };
-                                    
-                                    // get attribute data for individual node
-                                    dataService.getData("similarity/fragment", "001_1").then(function(data) {
-                                        
-                                        var vizScope = scope.$parent;
-                                        var newArray = [];
-                                        
-                                        // check for state of the node
-                                        if (isActive) {
-                                            
-                                            // loop through detail object
-                                            for (var i=0; i < vizScope.details.length; i++) {
-                                                
-                                                if (vizScope.details[i].id.split("_")[0] == d.id) {
-
-                                                } else {
-                                                    
-                                                    // push value into new array
-                                                    newArray.push(vizScope.details[i]);
-                                                    
-                                                }
-                                                
-                                            };
-                                            
-                                            // assign to scope
-                                            vizScope.details = newArray;
-                                            
-                                        } else {
-                                        
-                                            // create new data object
-                                            var newData = { id: d.id + "_1" };
-
-                                            // assign to scope
-                                            vizScope.details = [newData].concat(vizScope.details);
-                                            
-                                        };
-
-                                    });
                                                                         
                                 }
                             });
@@ -163,6 +127,29 @@ angular.module("sticky-nodes-directive", [])
                                 node.attr("cx", function(d) { return d.x; })
 					               .attr("cy", function(d) { return d.y; });  
                                 
+                            };
+                            
+                            function cluster() {
+                                
+                                force
+							  .nodes(data.nodes)
+							  //.links(data.links)
+                                .on("tick", rearrange)
+							  .start();
+                                
+                            };
+                            
+                            function rearrange(e) {
+
+                              // Push different nodes in different directions for clustering.
+                              var k = 6 * e.alpha;
+                              nodes.forEach(function(o, i) {
+                                o.y += i & 1 ? k : -k;
+                                o.x += i & 2 ? k : -k;
+                              });
+
+                              node.attr("cx", function(d) { return d.x; })
+                                  .attr("cy", function(d) { return d.y; });
                             };
                                 
                         };

@@ -22,56 +22,31 @@ html, body {
     
 }
 
-main {
+hgroup {
     
-    margin-top: 2em;
-    position: relative;
-    width: 90%;
-    
-}
-
-/* state title */
-main > h1 {
-    
-    font-size: 3em;
-    margin-bottom: 1em;
+    background: rgba(0, 0, 0, 0.1);
+    bottom: 0;
+    height: 1em;
+    padding: 60px;
+    position: absolute;
+    width: calc(100% - 120px);
     
 }
 
-canvas {
+h1 {
     
-    display: block;
-    margin-top: 1em;
-    
-}
-
-section {
-    
-    display: flex;
-    margin-bottom: 10em;
-    margin-top: 1em;
-    /*position: relative;*/
+    font-size: 2em;
+    text-align: center;
     
 }
 
 section h1 {
     
-    font-size: 2em;
-    margin-bottom: 0.5em;
-    
-}
-
-article {
-	
-	margin-bottom: 3em;
-	
-}
-
-/* main sections */
-section div {
-    
-    position: relative;
-    width: 100%;
+    bottom: 6em;
+    font-size: 1em;
+    left: 50%;
+    position: absolute;
+    transform: translateX(-50%);
     
 }
 
@@ -126,43 +101,5 @@ stacked-bar-chart .label {
     
     font-size: 0.5em;
     text-anchor: middle;
-    
-}
-
-#imageView {
-    
-    position: absolute;
-    
-}
-
-.grid {
-    
-    align-content: space-between;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    
-}
-
-.grid div {
-    
-    background-position: 0% 0%;
-    background-repeat: no-repeat;
-    background-size: cover;
-    height: 250px;
-    width: 400px;
-    margin: auto;
-    margin-bottom: 1em;
-    
-}
-
-.grid p {
-    
-    background: rgb(35,24,24);
-    color: white;
-    display: inline;
-    padding: 0.5em;
-    position: relative;
-    top: 0.7em;
     
 }
