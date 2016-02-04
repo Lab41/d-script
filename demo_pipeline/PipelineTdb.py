@@ -16,7 +16,8 @@ from featextractor import extract_imfeats_debug
 
 from data_iters.archive.iam_iterator import IAM_MiniBatcher
 
-def PipelineTdb():
+# def PipelineTdb():
+if True:
     
     # Which training dataset do we want to train from?
     train_dataset='iam-words'

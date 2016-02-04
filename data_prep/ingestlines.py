@@ -13,14 +13,14 @@ word_path = 'data/words/'
 ### IAM DATASET ###
 
 def create_dictionaries( forms_txt ):
-
-'''
-  Do the mapping from form to author and from author to form.
-  Return two dictionaries:
+    
+    '''
+      Do the mapping from form to author and from author to form.
+      Return two dictionaries:
   
-  - D1 [ author ] = form
-  - D2 [  form  ] = author
-'''
+      - D1 [ author ] = form
+      - D2 [  form  ] = author
+    '''
 
     forms_unproc = open( forms_txt, 'r').read().splitlines()
     forms=[]
@@ -47,9 +47,9 @@ def create_dictionaries( forms_txt ):
 
 def iam2hdf5_lines( forms_txt, lines_txt, author_lines_hdf5, lines_hdf5=None, from_form=False ):
 
-'''
-  iam2hdf5_lines: With information from lines.txt, write to author_lines.hdf5 and/or lines.hdf5.
-'''
+    '''
+      iam2hdf5_lines: With information from lines.txt, write to author_lines.hdf5 and/or lines.hdf5.
+    '''
     
     # Get author2form and form2author dictionaries
     author2form, form2author = create_dictionaries( forms_txt )
@@ -95,9 +95,9 @@ def iam2hdf5_lines( forms_txt, lines_txt, author_lines_hdf5, lines_hdf5=None, fr
 #  2. Write image section to HDF5 file
 def iam2hdf5_words( forms_txt, words_txt, author_words_hdf5, words_hdf5=None, from_form=False ):
 
-'''
-  iam2hdf5_words: With information from lines.txt, write to author_lines.hdf5 and/or lines.hdf5.
-'''
+    '''
+      iam2hdf5_words: With information from lines.txt, write to author_lines.hdf5 and/or lines.hdf5.
+    '''
 
     author2form, form2author = create_dictionaries( forms_txt )
 
@@ -184,7 +184,8 @@ def readtif(imname):
     im = Image.open(imname)
     return numpy.array( im.getdata(), numpy.uint8 ).reshape(im.size[1], im.size[0])
 
-def icdar13_hdf5( icdar13path='fileserver/icdar13/benchmarking/', author_images_hdf5, images_hdf5 = None ):
+icdar13path='fileserver/icdar13/benchmarking/'
+def icdar13_hdf5( icdar13path, author_images_hdf5, images_hdf5 = None ):
 
     ### ATTENTION. If you want to extract evaluation dataset, change "benchmarking" to that
     icdar13exdir = os.listdir(icdar13path)
@@ -210,4 +211,50 @@ def icdar13_hdf5( icdar13path='fileserver/icdar13/benchmarking/', author_images_
     i_fout.close()
     ai_fout.close()
     
+    
+### NMEC DATASET ###
+# from resizeimage import resizeimage
+def readtifn(imname, scale=0.5):
+    im = Image.open(imname)
+    print "Image Size Before"+str(im.size)
+    im = im.resize( (int(scale*im.size[0]), int(scale*im.size[1])), Image.BICUBIC )
+    print "Image Size After"+str(im.size)
+    return numpy.array( im.getdata() ).reshape(im.size[1], im.size[0])
+
+nmecpath='/fileserver/nmec-handwriting/stil-writing-corpus-processed/binary/FR/'
+author_words_file='author_nmec_bin_uint8.hdf5'
+images_hdf5='flat_nmec_bin_uint8.hdf5'
+scale=0.5
+if True:
+# def nmec_bw_hdf5( nmecpath, author_words_file, images_hdf5 = None, scale=0.5 ):
+
+    ### ATTENTION. If you want to extract evaluation dataset, change "benchmarking" to that
+    icdar13exdir = os.listdir(nmecpath)
+    ai_fout = h5py.File(author_words_file,'w')
+    if images_hdf5:
+        i_fout = h5py.File(images_hdf5,'w')
+    author_groups = {}
+
+    # Create groups for HDF5 to write out
+    for the_file in icdar13exdir:
+        
+        the_author=the_file.split('-')[1]
+        if not author_groups.has_key(the_author):
+            author_groups[the_author] = ai_fout.create_group(the_author)
+            
+        # Read the image
+        # the_image = scipy.misc.imread( nmecpath+'/'+the_file )
+        the_image = readtifn( nmecpath+'/'+the_file, scale )
+        author_groups[the_author].create_dataset( the_file, data=the_image.astype(uint8) )
+        
+        # Write to flat file
+        if images_hdf5:
+            data_group = i_fout.create_dataset( the_file, data=the_image.astype(uint8) )
+            data_group.attrs.create( 'author', the_author )
+        print "Finished image read and write of file "+the_file+" to "+author_words_file+" and "+images_hdf5
+        sys.stdout.flush()
+
+    i_fout.close()
+    ai_fout.close()
+
 
