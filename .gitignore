@@ -62,3 +62,5 @@ target/
 # Ignore HDF5 files
 *.hdf5
 *.npy
+*.tgz
+

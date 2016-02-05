@@ -22,6 +22,7 @@ hdf5images='nmecdata/flat_nmec_bin_uint8.hdf5'
 # This is the file that you will load the features from or save the features to
 # featurefile = 'icdar13data/benchmarking-processed/icdar13be_fiel657.npy'
 # featurefile = 'icdar13data/experimental-processed/icdar13ex_fiel657.npy'
+# featurefile = 'nmecdata/nmec_bw_fiel657_features_steps5_thresh.0025.npy'
 featurefile = 'nmecdata/nmec_bw_fiel657_features_steps5_thresh.15.npy'
 
 # This is the neural networks and parameters you are deciding to use
@@ -36,11 +37,9 @@ labels = h5py.File(hdf5images).keys()
 
 
 # ### Load feature extractor neural network
-
-# In[ ]:
-
-vnet = load_verbatimnet( 'fc7', paramsfile=paramsfile )
-vnet.compile(loss='mse', optimizer='sgd')
+if not load_features:
+   vnet = load_verbatimnet( 'fc7', paramsfile=paramsfile )
+   vnet.compile(loss='mse', optimizer='sgd')
 
 
 # ### Image features
@@ -72,7 +71,7 @@ k = 10
 # Max top (hard criteria)
 maxtop = 2
 # Number of examples per image
-g = 8
+g = 4
 
 # Run through the adjacency matrix
 softcorrect = 0

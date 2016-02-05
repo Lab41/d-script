@@ -25,6 +25,7 @@ RUN cd /root && \
 ADD bootstrap.sh /
 RUN chmod a+x bootstrap.sh
 
+# ADD cudnn-7.0-linux-x64-v3.0-prod.tgz /opt
 ADD cudnn-7.0-linux-x64-v3.0-prod.tgz /opt
 RUN cd /opt/cuda
 
