@@ -23,7 +23,7 @@ def load_verbatimnet( layer, params='/fileserver/iam/iam-processed/models/fiel_1
     
     return vnet
 
-def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20) ):
+def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20), varthresh=None ):
 
     # Image files
     hdf5file=h5py.File(hdf5name)
@@ -34,21 +34,24 @@ def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20) ):
     # Loop through all the images in the HDF5 file
     for imname in hdf5file.keys():
         img = 1.0 - hdf5file[imname].value /255.0 
-        # shards = np.zeros( (0, 1, shingle_dims[0], shingle_dims[1]) )
         shards = []
 
         # Collect the inputs for the image
-        for shard in StepShingler(img, hstep=steps[1], vstep=steps[0], shingle_size=shingle_dims):    
+        for shard in StepShingler(img, hstep=steps[1], vstep=steps[0], shingle_size=shingle_dims):
+            if varthresh and np.std(shard) < varthresh:
+                continue
             shard = np.expand_dims(shard,0)
-            # shards = np.concatenate( (shards, shard) )
             shards += [shard]
         shards = np.array(shards)
         print "Loaded %d shards in and predicting on image %s" %(len(shards), imname)
         sys.stdout.flush()
 
         # Predict the neural network and append the mean of features to overall imfeatures
-        features = network.predict( shards, verbose=1 )
-        imfeatures = np.concatenate( (imfeatures, np.expand_dims(features.mean(axis=0),0)) )
+        if len(shards)!=0:
+            features = network.predict( shards, verbose=1 )
+            imfeatures = np.concatenate( (imfeatures, np.expand_dims(features.mean(axis=0),0)) )
+        else:
+            imfeatures = np.concatenate( (imfeatures, np.zeros((1,4096))) )
         
     return imfeatures
 
