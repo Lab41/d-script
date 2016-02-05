@@ -25,6 +25,13 @@ RUN cd /root && \
 ADD bootstrap.sh /
 RUN chmod a+x bootstrap.sh
 
+ADD cudnn-7.0-linux-x64-v3.0-prod.tgz /opt
+RUN cd /opt/cuda
+
+ENV LD_LIBRARY_PATH=/opt/cuda/lib64:$LD_LIBRARY_PATH
+ENV LIBRARY_PATH=/opt/cuda/lib64:$LIBRARY_PATH
+ENV CPATH=/opt/cuda/include:$CPATH
+
 EXPOSE 8888
 
-CMD ["ipython", "notebook", "--ip='*'", "--no-browser"]
+CMD ["jupyter", "notebook", "--no-browser", "--ip='*'"]

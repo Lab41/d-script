@@ -2,9 +2,10 @@
 set -e
 
 # image name
-__image=lab41/cudnn-keras-notebook
+__image=lab41/keras-notebook
+__tag=cudnn
 
 # build image
-echo "Building caffe-cuda-cudnn"
-docker build -t $__image .
+echo "Building $__image:$tag"
+docker build --no-cache -t $__image:$__tag .
 
