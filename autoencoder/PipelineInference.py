@@ -23,7 +23,7 @@ hdf5images='nmecdata/flat_nmec_bin_uint8.hdf5'
 # featurefile = 'icdar13data/benchmarking-processed/icdar13be_fiel657.npy'
 # featurefile = 'icdar13data/experimental-processed/icdar13ex_fiel657.npy'
 # featurefile = 'nmecdata/nmec_bw_fiel657_features_steps5_thresh.0025.npy'
-featurefile = 'nmecdata/nmec_bw_fiel657_features_steps5_thresh.005.npy'
+featurefile = 'nmecdata/nmec_bw_fiel657_features_steps5_thresh.15.npy'
 
 # This is the neural networks and parameters you are deciding to use
 paramsfile = '/fileserver/iam/iam-processed/models/fiel_657.hdf5'
@@ -52,7 +52,7 @@ if load_features:
     print "Loaded features"
 else:
     print "Begin extracting features from "+hdf5images
-    imfeats = extract_imfeats( hdf5images, vnet, steps=(5,5), varthresh=0.005 )
+    imfeats = extract_imfeats( hdf5images, vnet, steps=(5,5), varthresh=0.05 )
     print h5py.File(hdf5images).keys()
     np.save( featurefile, imfeats )
 
@@ -64,7 +64,8 @@ F = imfeats.dot(imfeats.T)
 np.fill_diagonal( F , -1 )
 
 
-### Evaluate classifier on HDF5 file (ICDAR 2013)
+# ### Evaluate classifier on HDF5 file (ICDAR 2013)
+
 # Top k (soft criteria)
 k = 10
 # Max top (hard criteria)
