@@ -162,7 +162,7 @@ class Hdf5MiniBatcher:
         assert output_arr is not None
         
         if postprocess is not None:
-            output_arr = postprocess(output_arr, rng=rng)
+            output_arr = postprocess(output_arr, rng=rng, shingle_dim=shingle_dim)
 
         return output_arr
 
