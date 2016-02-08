@@ -65,7 +65,7 @@ num_forms_per_author=-1
 shingle_dim=(56,56)
 batch_size=32
 load_size=batch_size*1000
-iterations = 1000
+iterations = 10000
 lr = 0.001
 
 
@@ -74,10 +74,11 @@ lr = 0.001
 # Here, we're using the Fiel Network
 
 # In[6]:
-
 vnet = load_verbatimnet( 'fc7', paramsfile=paramsfile, compiling=False )
 vnet.add(Dense(num_authors))
 vnet.add(Activation('softmax'))
+if True:
+  vnet.load_weights('fielnet-iam.hdf5')
 sgd = SGD(lr=lr, decay=1e-6, momentum=0.9, nesterov=True)
 vnet.compile(loss='categorical_crossentropy', optimizer=sgd)
 print "Finished compilation"
