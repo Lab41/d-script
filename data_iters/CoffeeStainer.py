@@ -13,7 +13,7 @@ class CoffeeStainer:
         return x
     
     def __init__(self):
-        self.stain = Image.open("/work/johnm/d-script/data_iters/coffee_stain_1.jpg").convert('RGBA')
+        self.stain = Image.open("./coffee_stain_1.jpg").convert('RGBA')
     
     def get_rand_stain_w_random_brightness(self, shingle_img, shin_dim, rng):
         #assumes RGBA stain > shingle in both dim
