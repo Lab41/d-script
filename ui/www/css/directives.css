@@ -9,6 +9,7 @@
 /* !GLOBALS
 /* !CUSTOM
 /* --- !content-slider
+/* --- !traveling-nodes
 
 /******************************* !IMPORTS *******************************/
 
@@ -85,4 +86,20 @@ content-slider section div {
     height: 100%;
     width: 100%;
 
+}
+
+/**************************/
+/**** !traveling-nodes ****/
+/**************************/
+
+traveling-nodes .node {
+    
+    cursor: pointer;
+    
+}
+
+traveling-nodes .node:hover {
+    
+    fill: rgba(198, 8, 203, 0.7);
+    
 }

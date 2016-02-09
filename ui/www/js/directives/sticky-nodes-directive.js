@@ -64,7 +64,7 @@ angular.module("sticky-nodes-directive", [])
 							  //.links(data.links)
                                 .on("tick", tick)
 							  .start();
-                            
+                            console.log(data.nodes.length);
                              var node = svg
                                 .selectAll(".node")
                                 .data(data.nodes)

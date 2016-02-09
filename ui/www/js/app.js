@@ -46,6 +46,6 @@ app.config(function($stateProvider, $urlRouterProvider) {
         controller: "stepCtrl"
     })
 
-    $urlRouterProvider.otherwise("/step-1");
+    $urlRouterProvider.otherwise("/documents");
 
 });
