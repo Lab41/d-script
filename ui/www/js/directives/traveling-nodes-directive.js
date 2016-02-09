@@ -196,9 +196,12 @@ d3.tsv("data/test3.tsv", function(error, data) {
 		.on("tick", tick)
 		.start();
 
-	var circle = canvas.selectAll("rect")
+	var circle = canvas
+        .selectAll("g")
 		.data(nodes)
-	  .enter().append("rect")
+	  .enter()
+        .append("g")
+        .append("rect")
 		.attr({
             class: "node",
             height: radius,
@@ -209,6 +212,8 @@ d3.tsv("data/test3.tsv", function(error, data) {
 		//.style("fill", function(d) { return d.color; })
         .on({
             click: function(d) {
+                
+                var nodeD = d;console.log(nodeD);
                 
                 // show image
                 scope.currentImg = "data/benchmarking/001_1.png"
@@ -221,10 +226,95 @@ d3.tsv("data/test3.tsv", function(error, data) {
                     .attr({
                         rx: 0,
                         ry: 0
+                    })
+                    .style({
+                        fill: "transparent",
+                        stroke: "red"
                     });
                 
                 // use global timer function to move nodes so force layout is maintained
                 timer(d);
+                
+                var data = [
+                    {
+                        name: "yo",
+                        value: 5
+                    },
+                    {
+                        name: "blah",
+                        value: 90
+                    }
+                ];
+                                var xAxisHeight = (0.3 * height);// % of total canvas height
+                var activeHeight = height - xAxisHeight - (padding * 2);
+                var activeWidth = width - (padding * 2);
+                                var colorRange = ["grey", "white", "teal"];
+                                // set up stack layout
+                var stack = d3.layout.stack();
+                
+                
+                // max value
+                            var maxValue = d3.max(data, function(d) { return d.value; });
+                            
+                            // create color scale
+                            var colorScale = d3.scale.linear()
+                                .domain([0, maxValue])
+                                .range(colorRange);
+                            
+                            // map data for horizontal stack
+                            var data = data.map(function(d) {
+                                return [{
+                                    y: /*d.value*/1,
+                                    x: d.name,
+                                    value: d.value
+                                }];
+                            });
+                            
+                            // initialize layout
+                            stack(data)
+                            
+                            // map data for horizontal stack to invert x,y values
+                            // y0 becomes x0
+                            var data = data.map(function(group) {
+                                return group.map(function(d) {
+                                    return {
+                                        x: d.y,
+                                        y: d.x,
+                                        x0: d.y0,
+                                        value: d.value
+                                    };
+                                });
+                            });
+                            
+                            //set x scale
+                            var xScale = d3.scale.linear()
+                                    .domain([0, d3.max(data, function (group) { return d3.max(group, function (d) { return d.x + d.x0; }); })])
+                                    .range([0, activeWidth]);
+                                //.domain(data.map(function (d) { return d[0].y; }))
+                                //.rangeRoundBands([0, activeWidth, gutter]);
+
+                            //set x axis
+                            var xAxis = d3.svg.axis()
+                                    .scale(xScale)
+                                    .orient("bottom");
+                            
+                            // add bars
+                            var bar = d3.select(this.parentNode)
+                                .selectAll(".feature")
+                                .data(data)
+                                .enter()
+                                .append("rect")
+                                .attr({
+                                    class: "feature",
+                                    x: function(d) { return xScale(d[0].x0); },
+                                    y: nodeD.y,
+                                    height: 10,
+                                    width: function(d) { return xScale(d[0].x); }
+                                })
+                                .style({
+                                    fill: function(d) { return colorScale(d[0].value); }
+                                });
+                
                 
             }
         })
