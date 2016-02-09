@@ -1,6 +1,7 @@
 import numpy as np
 import h5py
 import sys
+from scipy.fftpack import dct
 sys.path.append('..')
 
 # d-script imports
@@ -13,6 +14,16 @@ ss = (56,56)
 hs = 30
 vs = 30
 
+## Patch filters --------------------------
+# Two dimensional discrete cosine transform
+def dct2filt( patch, varthresh ):
+    return dct(dct(patch,axis=0),axis=1)
+def varfilt( patch, varthresh ):
+    return np.var(shard) < varthresh
+
+
+## Neural Networks --------------------------
+# Load the verbatim neural network feature extractor (up to FC7 layer)
 def load_verbatimnet( layer, params='/fileserver/iam/iam-processed/models/fiel_1k.hdf5' ):
 
     print "Establishing Fiel's verbatim network"
@@ -23,6 +34,8 @@ def load_verbatimnet( layer, params='/fileserver/iam/iam-processed/models/fiel_1
     
     return vnet
 
+## Corpus operator --------------------------
+# Extract features over the entire corpus. Takes in the flat hdf5 file.
 def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20), varthresh=None ):
 
     # Image files
@@ -55,8 +68,7 @@ def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20), var
         
     return imfeatures
 
-
-
+## File formatting --------------------------
 # From author format to flat format
 def author2flatformat( hdf5_input_name, hdf5_output_name ):
     

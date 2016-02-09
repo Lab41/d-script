@@ -17,13 +17,15 @@ load_features = False
 # hdf5images='icdar13data/benchmarking-processed/icdar_be.hdf5'
 # hdf5images = 'icdar13data/experimental-processed/icdar13_ex.hdf5'
 # hdf5images='nmecdata/nmec_scaled_flat.hdf5'
-hdf5images='nmecdata/flat_nmec_bin_uint8.hdf5'
+# hdf5images='nmecdata/flat_nmec_bin_uint8.hdf5'
+hdf5images='nmecdata/flat_nmec_cropped_uint8.hdf5'
 
 # This is the file that you will load the features from or save the features to
 # featurefile = 'icdar13data/benchmarking-processed/icdar13be_fiel657.npy'
 # featurefile = 'icdar13data/experimental-processed/icdar13ex_fiel657.npy'
 # featurefile = 'nmecdata/nmec_bw_fiel657_features_steps5_thresh.0025.npy'
-featurefile = 'nmecdata/nmec_bw_fiel657_features_steps5_thresh.005.npy'
+# featurefile = 'nmecdata/nmec_bw_fiel657_features_steps5_thresh.005.npy'
+featurefile = 'nmecdata/nmec_cropped_fiel657_features_steps5_thresh.005.npy'
 
 # This is the neural networks and parameters you are deciding to use
 paramsfile = '/fileserver/iam/iam-processed/models/fiel_657.hdf5'
@@ -70,7 +72,7 @@ k = 10
 # Max top (hard criteria)
 maxtop = 2
 # Number of examples per image
-g = 4
+g = 8
 
 # Run through the adjacency matrix
 softcorrect = 0

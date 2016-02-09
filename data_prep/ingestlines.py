@@ -221,10 +221,10 @@ def readtifn(imname, scale=0.5):
     print "Image Size After"+str(im.size)
     return numpy.array( im.getdata() ).reshape(im.size[1], im.size[0])
 
-nmecpath='/fileserver/nmec-handwriting/stil-writing-corpus-processed/binary/FR/'
-author_words_file='author_nmec_bin_uint8.hdf5'
-images_hdf5='flat_nmec_bin_uint8.hdf5'
-scale=0.5
+# nmecpath='/fileserver/nmec-handwriting/stil-writing-corpus-processed/binary/FR/'
+# author_words_file='author_nmec_bin_uint8.hdf5'
+# images_hdf5='flat_nmec_bin_uint8.hdf5'
+# scale=0.5
 def nmec_bw_hdf5( nmecpath, author_words_file, images_hdf5 = None, scale=0.5 ):
 
     ### ATTENTION. If you want to extract evaluation dataset, change "benchmarking" to that
@@ -244,11 +244,11 @@ def nmec_bw_hdf5( nmecpath, author_words_file, images_hdf5 = None, scale=0.5 ):
         # Read the image
         # the_image = scipy.misc.imread( nmecpath+'/'+the_file )
         the_image = readtifn( nmecpath+'/'+the_file, scale )
-        author_groups[the_author].create_dataset( the_file, data=the_image.astype(uint8) )
+        author_groups[the_author].create_dataset( the_file, data=the_image.astype(numpy.uint8) )
         
         # Write to flat file
         if images_hdf5:
-            data_group = i_fout.create_dataset( the_file, data=the_image.astype(uint8) )
+            data_group = i_fout.create_dataset( the_file, data=the_image.astype(numpy.uint8) )
             data_group.attrs.create( 'author', the_author )
         print "Finished image read and write of file "+the_file+" to "+author_words_file+" and "+images_hdf5
         sys.stdout.flush()
@@ -256,12 +256,10 @@ def nmec_bw_hdf5( nmecpath, author_words_file, images_hdf5 = None, scale=0.5 ):
     i_fout.close()
     ai_fout.close()
 
-nmecpath='/fileserver/nmec-handwriting/stil-writing-corpus-processed/binary/FR/'
-author_words_file='author_nmec_bin_uint8.hdf5'
-images_hdf5='flat_nmec_bin_uint8.hdf5'
-scale=0.5
+nmecpath='/fileserver/nmec-handwriting/stil-writing-corpus-processed/cropped_png/'
+author_words_file='author_nmec_cropped_uint8.hdf5'
+images_hdf5='flat_nmec_cropped_uint8.hdf5'
 def nmec_cropped_hdf5( nmecpath, author_words_file, images_hdf5 = None, scale=0.5 ):
-
     ### ATTENTION. If you want to extract evaluation dataset, change "benchmarking" to that
     icdar13exdir = os.listdir(nmecpath)
     ai_fout = h5py.File(author_words_file,'w')
@@ -278,12 +276,12 @@ def nmec_cropped_hdf5( nmecpath, author_words_file, images_hdf5 = None, scale=0.
             
         # Read the image
         # the_image = scipy.misc.imread( nmecpath+'/'+the_file )
-        the_image = readtifn( nmecpath+'/'+the_file, scale )
-        author_groups[the_author].create_dataset( the_file, data=the_image.astype(uint8) )
+        the_image = readtifn( nmecpath+'/'+the_file, scale=0.5 )
+        author_groups[the_author].create_dataset( the_file, data=the_image.astype(numpy.uint8) )
         
         # Write to flat file
         if images_hdf5:
-            data_group = i_fout.create_dataset( the_file, data=the_image.astype(uint8) )
+            data_group = i_fout.create_dataset( the_file, data=the_image.astype(numpy.uint8) )
             data_group.attrs.create( 'author', the_author )
         print "Finished image read and write of file "+the_file+" to "+author_words_file+" and "+images_hdf5
         sys.stdout.flush()
