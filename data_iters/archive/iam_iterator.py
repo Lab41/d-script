@@ -2,7 +2,7 @@ import logging
 import h5py
 import numpy as np
 from collections import defaultdict
-from minibatcher import MiniBatcher
+from oldbatcher import MiniBatcher
 
 class IAM_MiniBatcher:
     @staticmethod
@@ -81,8 +81,8 @@ class IAM_MiniBatcher:
 
         item_getter = lambda f, key: IAM_MiniBatcher.shingle_item_getter(f, key, shingle_dim)
         self.batch_size = batch_size
-        m = MiniBatcher(fIn, keys,item_getter=item_getter, normalize=normalize,
-                        batch_size=self.batch_size, min_fragments=0, train_pct=train_pct, test_pct=test_pct, val_pct=val_pct)
+        m = MiniBatcher(fIn, keys,item_getter=item_getter, batch_size=self.batch_size, min_fragments=0, 
+                        train_pct=train_pct, test_pct=test_pct, val_pct=val_pct)
         self.m = m
         self.default_mode = default_mode
 
@@ -142,3 +142,4 @@ def main():
     print 'Number of unique authors in first batch: {}'.format(len(set(z[1])))
 if __name__ == "__main__":
     main()
+

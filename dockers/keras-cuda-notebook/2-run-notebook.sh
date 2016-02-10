@@ -6,7 +6,7 @@ if [ $# -ne 2 ]; then
 fi
 
 # image name
-__image=lab41/cudnn-keras-notebook
+__image=lab41/keras-notebook:cudnn
 __volume_host=$1
 #__volume_host=$PWD
 __volume_cntr=/work

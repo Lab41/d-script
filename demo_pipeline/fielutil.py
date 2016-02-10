@@ -17,13 +17,12 @@ from keras.layers.normalization import BatchNormalization as BN
 
 import matplotlib.pylab as plt
 import sys
-sys.path.append('/work/code/repo/d-script/')
+sys.path.append('..')
 # d-script imports
 from data_iters.minibatcher import MiniBatcher
-from data_iters.iam_hdf5_iterator import IAM_MiniBatcher
+# from data_iters.hdf5_iterator import IAM_MiniBatcher
+from class_icdar_iterator import *
 
-num_authors=47
-shingle_dim=(120,120)
 
 from PIL import Image
 def randangle(batch):
@@ -71,7 +70,7 @@ def get_batch( author_hdf5_file, author_ids, shingle_size=(120,120), data_size=3
         
     return author_batch, author_truth
 
-def fielnet( hdf5file, layer='softmax', compile=False ):
+def tfdnet( hdf5file, layer='softmax', compile=False ):
     model = Sequential()
     model.add(Convolution2D(48, 12, 12,
                         border_mode='valid',
@@ -153,8 +152,99 @@ def fielnet( hdf5file, layer='softmax', compile=False ):
     return model
 
     
-# featmodel = Sequential()
-# for i in xrange( len(model.layers)-4 ):
-#     featmodel.add( model.layers[i] )
-
+def verbatimnet( layer='softmax', compiling=False ):
     
+    layers = ['conv1', 'conv2', 'conv3', 'conv4', 'conv5',
+              'fc6', 'fc7', 'softmax']
+    
+    model = Sequential()
+    model.add(Convolution2D(96, 11, 11,
+                            border_mode='valid', subsample=(4,4),
+                            input_shape=(1, 56, 56),
+                            activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2,2)))
+
+    if layer in layers[-7:]:
+        model.add(Convolution2D(96, 5, 5, activation='relu', border_mode='same'))
+        model.add(MaxPooling2D(pool_size=(2,2)))
+
+    if layer in layers[-6:]:
+        model.add(Convolution2D(256, 3, 3, border_mode = 'same', activation='relu'))
+
+    if layer in layers[-5:]:
+        model.add(Convolution2D(256, 3, 3, border_mode = 'same', activation='relu'))
+
+    if layer in layers[-4:]:
+        model.add(Convolution2D(256, 3, 3, border_mode = 'same', activation='relu'))
+        model.add(MaxPooling2D(pool_size=(3, 3)))
+        model.add(Dropout(0.25))
+    
+    if layer in layers[-3:]:
+        model.add(Flatten())
+        model.add(Dense(4096, activation='relu'))
+
+    if layer in layers[-2:]:
+        model.add(Dense(4096, activation='relu'))
+        model.add(Dropout(0.25))
+    
+    if layer in layers[-1]:
+        model.add(Dense(num_authors))
+        model.add(Activation('softmax'))
+    
+    if compiling:
+        print "Compiling model"
+        sgd = SGD(lr=lr, decay=1e-6, momentum=0.9, nesterov=True)
+        model.compile(loss='categorical_crossentropy', optimizer=sgd)
+        print "Finished compilation"
+    
+    return model
+
+
+
+def loadparams( model, hdf5file ):
+    
+    params = h5py.File(hdf5file)
+    for k in range(len(model.layers)):
+        # This method does not make use of Sequential.set_weights()
+        # for backwards compatibility.
+        g = params['layer_{}'.format(k)]
+        weights = [g['param_{}'.format(p)] for p in range(g.attrs['nb_params'])]
+        model.layers[k].set_weights(weights)
+    params.close()
+    
+    
+def load_verbatimnet( layer, paramsfile = '/fileserver/iam/iam-processed/models/fiel_1k.hdf5', compiling=False ):
+
+    print "Establishing Fiel's verbatim network"
+    vnet = verbatimnet(layer,compiling=compiling)
+    loadparams( vnet, paramsfile )
+    print "Loaded neural network up to "+layer+" layer"    
+    
+    return vnet
+
+
+def extract_imfeats( hdf5name, network ):
+
+    # Image files
+    hdf5file=h5py.File(hdf5name)
+
+    # Final output of neural network
+    imfeatures = np.zeros( (0,4096) )
+
+    # Loop through all the images in the HDF5 file
+    for imname in hdf5file.keys():
+        img = 1.0 - hdf5file[imname].value /255.0 
+        shards = np.zeros( (0, 1, 56, 56) )
+
+        # Collect the inputs for the image
+        for shard in StepShingler(img, hstep=30, vstep=30, shingle_size=(56,56)):    
+            shard = np.expand_dims(np.expand_dims(shard, 0),0)
+            shards = np.concatenate( (shards, shard) )
+        print "Loaded %d shards in and predicting on image %s" %(len(shards), imname)
+        sys.stdout.flush()
+
+        # Predict the neural network and append the mean of features to overall imfeatures
+        features = network.predict( shards, verbose=1 )
+        imfeatures = np.concatenate( (imfeatures, np.expand_dims(features.mean(axis=0),0)) )
+        
+    return imfeatures
