@@ -13,22 +13,24 @@ urls = (
     "/rest/static/(.*)", "static_data",
     "/rest/similarity/(author|fragment)/(.*)", "similarity",
     "/rest/classification/(.*)", "classification",
+    "/rest/process", "process",
     # front-end routes to load angular app
-    "/(.*)", "www",
-    "/#(.*)", "index",
-    "/", "index"
+    "/", "index",
+    "/(.+)", "www"
 )
 
 class www:
     def GET(self, filename):
         try:
             f = open('www/' + filename)
+            if filename.endswith(".css"):
+                web.header("Content-Type","text/css")
             return f.read() # or return f.read() if you're using 0.3
         except IOError: # No file named that
             web.notfound()
             
 class index:
-    def GET(self, filename):
+    def GET(self):
         try:
             f = open("www/index.html")
             return f.read()
@@ -169,6 +171,34 @@ class static_data:
             return f.read()
         except IOError:
             web.notfound()
+            
+class process:
+    def GET(self):
+        
+        data = [
+            {
+                "name": "document corpus",
+                "url": "documents",
+                "percent": 47
+            },
+            {
+                "name": "feature extraction",
+                "url": "features",
+                "percent": 20
+            },
+            {
+                "name": "clustering",
+                "url": "clustering",
+                "percent": 62
+            },
+            {
+                "name": "classification",
+                "url": "classification",
+                "percent": 71
+            }
+        ];
+        
+        return json.dumps(data);
         
 app = web.application(urls, globals())
     

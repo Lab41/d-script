@@ -1,0 +1,28 @@
+<section ng-repeat="step in vizData"
+         ng-hide="!isCurrentSlideIndex($index);">
+    
+    <h1>{{ step.name }}</h1>
+
+    <div ui-view></div>
+
+</section>
+
+<!-- NAV ARROWS -->
+<nav>
+    
+    <a ui-sref="app.process({ step: previousStep })"
+       ng-click="previous();">
+        <svg viewBox="0 0 100 58.5"
+             class="icon">
+            <use xlink:href="assets/arrow-line-2.svg#artwork"></use>
+        </svg>
+    </a>
+
+    <a id="next">
+        <svg viewBox="0 0 100 58.5"
+             class="icon">
+            <use xlink:href="assets/arrow-line-2.svg#artwork"></use>
+        </svg>
+    </a>
+    
+</nav>

@@ -11,7 +11,6 @@ angular.module("stacked-bar-chart-directive", [])
 			title: "=",
             orientation: "="
 		},
-		template: "<p ng-if='\'title != ''\''>{{ title }}</p>",
 		link: function(scope, element, attrs) {
 			
 			// get d3 promise
