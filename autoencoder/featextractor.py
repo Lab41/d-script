@@ -8,6 +8,15 @@ from class_icdar_iterator import *
 from data_iters.minibatcher import MiniBatcher
 from fielutil import verbatimnet, loadparams
 
+# Required neural network libraries
+import keras
+from keras.models import Sequential
+from keras.layers.core import Dense, Dropout, Activation, Flatten
+from keras.layers.convolutional import Convolution2D, MaxPooling2D
+from keras.optimizers import SGD
+from keras.utils.np_utils import to_categorical
+from keras.layers.normalization import BatchNormalization as BN
+
 # Shingle, horizontal, and vertical step sizes
 ss = (56,56)
 hs = 30
@@ -23,6 +32,25 @@ def load_verbatimnet( layer, params='/fileserver/iam/iam-processed/models/fiel_1
     
     return vnet
 
+def load_denoisenet(shingle_dim):
+    model = Sequential()
+    model.add(Convolution2D(24, 6, 6,
+                        border_mode='valid',
+                        input_shape=(1, shingle_dim[0], shingle_dim[1])))
+    model.add(Activation('relu'))
+    model.add(Flatten())
+    model.add(Dense(1000))
+    model.add(Dense(np.prod(shingle_dim)))
+    model.add(Activation('sigmoid'))
+
+    print "Compiling model"
+    sgd = SGD(lr=0.1, decay=1e-6, momentum=0.7, nesterov=False)
+    model.compile(loss='mse', optimizer=sgd)
+    print "Finished compilation"
+    model.load_weights('linet.hdf5')
+    return model
+
+
 def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20), varthresh=None ):
 
     # Image files
@@ -30,6 +58,9 @@ def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20), var
 
     # Final output of neural network
     imfeatures = np.zeros( (0,4096) )
+    
+    # Noise network
+    noisenet = load_denoisenet()
 
     # Loop through all the images in the HDF5 file
     for imname in hdf5file.keys():
@@ -38,11 +69,13 @@ def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20), var
 
         # Collect the inputs for the image
         for shard in StepShingler(img, hstep=steps[1], vstep=steps[0], shingle_size=shingle_dims):
-            if varthresh and np.var(shard) < varthresh:
-                continue
             shard = np.expand_dims(shard,0)
             shards += [shard]
+          
         shards = np.array(shards)
+        finstop
+        shards = noisenet.predict(shards)
+        
         print "Loaded %d shards in and predicting on image %s" %(len(shards), imname)
         sys.stdout.flush()
 
