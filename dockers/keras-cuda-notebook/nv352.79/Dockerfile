@@ -1,6 +1,6 @@
 # Start with Ubuntu base image
 FROM ubuntu:15.04
-MAINTAINER Kai Arulkumaran <design@kaixhin.com>
+MAINTAINER Patrick Callier <pcallier@lab41.org>
 
 ENV DEBIAN_FRONTEND noninteractive
 
