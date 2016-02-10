@@ -1,14 +1,15 @@
 angular.module("traveling-nodes-directive", [])
 
-.directive("travelingNodes", ["d3Service", "dataService", "$stateParams", "$state", function(d3Service, dataService, $stateParams, $state) {
+.directive("travelingNodes", ["d3Service", "dataService", "$stateParams", "$state", "$timeout", function(d3Service, dataService, $stateParams, $state, $timeout) {
 	return {
 		restrict: "E",
 		scope: {
 			vizData: "=",
             canvasWidth: "=",
-            canvasHeight: "="
+            canvasHeight: "=",
+            title: "="
 		},
-        template: "<img ng-src='{{ currentImg }}'/>",
+        template: "<img ng-src='{{ currentImg }}'/><p>{{ title }}</p>",
 		link: function(scope, element, attrs) {
 			
 			// get d3 promise
@@ -23,8 +24,9 @@ angular.module("traveling-nodes-directive", [])
 				var color = ["orange", "teal", "grey", "#5ba819"];
 				
 				var force = d3.layout.force()
-					.charge(-20)
-                    .linkDistance(200)
+					.charge(0)
+                    .gravity(0)
+                    .friction(.9)
                     .size([(width - diameter), (height - diameter)]);
                 
                 var canvas = d3.select(element[0])
@@ -70,11 +72,15 @@ var sched_objs = [],
 	curr_minute = 0;
 
 var act_codes = [
-	{"index": "0", "short": "", "desc": "Sleeping"},
-	{"index": "1", "short": "", "desc": "Personal Care"},
-	{"index": "2", "short": "", "desc": "Eating and Drinking"},
-	{"index": "3", "short": "", "desc": "Education"},
+	{"index": "0", "short": "", "desc": ""},
+	{"index": "1", "short": "", "desc": ""},
+	{"index": "2", "short": "", "desc": ""},
+	{"index": "3", "short": "", "desc": ""},
 	{"index": "4", "short": "", "desc": "None"},
+    {"index": "5", "short": "", "desc": ""},
+    {"index": "6", "short": "", "desc": ""},
+    {"index": "7", "short": "", "desc": ""},
+    {"index": "8", "short": "", "desc": ""}
 ];
 
 
@@ -112,8 +118,20 @@ act_codes.forEach(function(code, i) {
 		foci[code.index] = center_pt;
 	} else {
 		
-        // set as row
-		foci[code.index] = { x: 0, y: (height / act_codes.length) * i };
+        // check for left side row
+        // clean up later into probably separate data sources
+        
+        if (i < (act_codes.length / 2)) {
+            
+            // set as row
+            foci[code.index] = { x: (0 + radius), y: (height / (act_codes.length/2)) * i };
+            
+        } else {
+            
+            // set on right side
+            foci[code.index] = { x: (width - radius), y: (height / (act_codes.length/2)) * (i - (act_codes.length/2)) };
+            
+        };
         
     };
         
@@ -124,7 +142,7 @@ d3.tsv("data/test3.tsv", function(error, data) {
     
     var button = d3.select(element[0])
                     .append("button")
-                    .text("extract all features")
+                    .text("steps")
                             .style({
                                 position: "absolute",
                                 top: '1em',
@@ -132,18 +150,67 @@ d3.tsv("data/test3.tsv", function(error, data) {
                             })
                     .on("click", function() {
                         
-                        var nodes = d3.selectAll(".node")
-                            .transition()
-                            .duration(500)
-                            .attr({
-                                rx: 0,
-                                ry: 0
-                            });
+                        var nodes = d3.selectAll(".node");
+                        
+                        // fix later w/state change
+                        if (nodes[0][0]["__data__"].moves == 0) {
+                            
+                            scope.title = "Feature Extraction";
+                            
+                        } else if (nodes[0][0]["__data__"].moves == 1) {
+                            
+                            scope.title = "Clustering";
+                            
+                        } else if (nodes[0][0]["__data__"].moves == 2) {
+                            
+                            scope.title = "Classification";
+                            
+                        };
+                        
+                        // fix later with state check
+                        if (nodes[0][0]["__data__"].moves < 3) {
+                                                
+                            nodes
+                                .transition()
+                                .duration(500)
+                                .attr({
+                                    rx: 0,
+                                    ry: 0
+                                });
+                            
+                        } else {
+                            
+                            nodes
+                                .transition()
+                                .duration(500)
+                                .attr({
+                                    rx: 5,
+                                    ry: 5
+                                });
+                            
+                        };
                         
                         d3.range(nodes[0].length).map(function(i) {
-                        timer(nodes[0][i]["__data__"]); // bad to use __data__ need to find better way to target
+                        
+                            var nodeD = nodes[0][i]["__data__"];// bad to use __data__ need to find better way to target
+                            
+                            // use global timer function to move nodes so force layout is maintained
+                        timer(nodeD, nodes[0][i].parentNode);
     
                         });
+                        
+                        // make sure force is done before drawing feature set
+                        force.on("end", function() {
+                            
+                            d3.range(nodes[0].length).map(function(i) {
+
+                            // draw features chart
+                            drawFeatures(nodes[0][i].parentNode);
+                                
+                            });
+
+                        });
+                        
                     });
 	
 	data.forEach(function(d) {
@@ -186,21 +253,19 @@ d3.tsv("data/test3.tsv", function(error, data) {
 	});
                                                
                                                
-
-	var force = d3.layout.force()
+force
 		.nodes(nodes)
-		.size([width, height])
-		.gravity(0)
-		.charge(0)
-		.friction(.9)
-		.on("tick", tick)
+        .on("tick", tick)
 		.start();
+	
 
-	var circle = canvas
+	var group = canvas
         .selectAll("g")
 		.data(nodes)
 	  .enter()
-        .append("g")
+        .append("g");
+    
+    var circle = group
         .append("rect")
 		.attr({
             class: "node",
@@ -213,10 +278,11 @@ d3.tsv("data/test3.tsv", function(error, data) {
         .on({
             click: function(d) {
                 
-                var nodeD = d;console.log(nodeD);
+                var nodeD = d;
+                var elementSelect = this;
                 
                 // show image
-                scope.currentImg = "data/benchmarking/001_1.png"
+                //scope.currentImg = "data/benchmarking/001_1.png"
                 console.log("show doc feature extraction - heatmap?");
                 
                 // modify corner radius so now the shape looks like a square
@@ -233,22 +299,67 @@ d3.tsv("data/test3.tsv", function(error, data) {
                     });
                 
                 // use global timer function to move nodes so force layout is maintained
-                timer(d);
+                timer(nodeD, elementSelect.parentNode);
                 
+                // make sure force is done before drawing feature set
+                force.on("end", function() {
+                    
+                    // draw features chart
+                    drawFeatures(elementSelect.parentNode);
+                    
+                });
+                
+            }
+        });
+    
+    function drawFeatures(parent) {
+                                    
                 var data = [
                     {
-                        name: "yo",
+                        name: "feature",
                         value: 5
                     },
                     {
-                        name: "blah",
+                        name: "feature",
+                        value: 8
+                    },
+                    {
+                        name: "feature",
+                        value: 200
+                    },
+                    {
+                        name: "feature",
                         value: 90
+                    },
+                    {
+                        name: "feature",
+                        value: 9
+                    },
+                    {
+                        name: "feature",
+                        value: 5
                     }
                 ];
-                                var xAxisHeight = (0.3 * height);// % of total canvas height
+        
+        var docNode2 = d3.select(parent)
+            .select(".node");
+        console.log(docNode2[0][0]["__data__"].moves);
+        // really bad way to select
+        // need to fix
+        if (docNode2[0][0]["__data__"].moves > 3) {
+            
+            // hacky way to remove
+            // fix later
+            d3.select(parent)
+                .select(".feature")
+                .remove();
+            
+        } else {
+            
+            var xAxisHeight = (0.3 * height);// % of total canvas height
                 var activeHeight = height - xAxisHeight - (padding * 2);
                 var activeWidth = width - (padding * 2);
-                                var colorRange = ["grey", "white", "teal"];
+                                var colorRange = ["white", "grey"];
                                 // set up stack layout
                 var stack = d3.layout.stack();
                 
@@ -298,26 +409,54 @@ d3.tsv("data/test3.tsv", function(error, data) {
                                     .scale(xScale)
                                     .orient("bottom");
                             
-                            // add bars
-                            var bar = d3.select(this.parentNode)
+                            // set selection
+                            var bar = d3.select(parent)
                                 .selectAll(".feature")
-                                .data(data)
+                                .data(data);
+        
+        // update selection
+        bar
+            .transition()
+            .duration(500)
+            .attr({
+                class: "feature",
+                x: function(d) { return xScale(d[0].x0); },
+                y: 0,
+                height: 10,
+                width: function(d) { return xScale(d[0].x); }
+            })
+            .style({
+                fill: function(d) { return colorScale(d[0].value); }
+            });
+        
+                                // enter selection
+                                bar
                                 .enter()
                                 .append("rect")
+                                .transition()
+                                    .duration(500)
                                 .attr({
                                     class: "feature",
                                     x: function(d) { return xScale(d[0].x0); },
-                                    y: nodeD.y,
+                                    y: 0,
                                     height: 10,
                                     width: function(d) { return xScale(d[0].x); }
                                 })
                                 .style({
                                     fill: function(d) { return colorScale(d[0].value); }
                                 });
-                
-                
-            }
-        })
+        
+        // exit selection
+        bar
+            .exit()
+            .transition()
+            .duration(500)
+            .remove();
+                                         
+                };
+        
+        };
+                                
 	
 	// Activity labels
 	var label = canvas.selectAll("text")
@@ -361,7 +500,7 @@ d3.tsv("data/test3.tsv", function(error, data) {
 		
 
 	// Update nodes based on activity and duration
-	function timer(cNode) {console.log(cNode);
+	function timer(cNode, parentElement) {
 		//d3.range(nodes.length).map(function(i) {
 			//var curr_node = nodes[i];
             var curr_node = cNode;
@@ -385,8 +524,17 @@ d3.tsv("data/test3.tsv", function(error, data) {
 				act_counts[curr_node.act] += 1;
 			
 				curr_node.moves = curr_moves;
-				curr_node.cx = foci[curr_node.act].x;
-				curr_node.cy = foci[curr_node.act].y;
+        
+        
+				//curr_node.cx = foci[curr_node.act].x;
+				//curr_node.cy = foci[curr_node.act].y;
+       
+                    d3.select(parentElement)
+                      //.each(collide(.5))
+                      //.style("fill", function(d) { return d.color; })
+                      .attr({
+                      transform: "translate(" + foci[curr_node.act].x + "," + foci[curr_node.act].y + ")"
+                  });
 			
 				//nodes[i].next_move_time += nodes[i].sched[ curr_node.moves ].duration;
 
@@ -394,7 +542,7 @@ d3.tsv("data/test3.tsv", function(error, data) {
 
 		//});
 
-		force.resume();
+		force.resume()
 		curr_minute += 1;
 /*
 		// Update percentages
@@ -459,7 +607,7 @@ d3.tsv("data/test3.tsv", function(error, data) {
 	    o.x += (foci[curr_act].x - o.x) * k * damper;
 	  });
 
-	  circle
+	  group
 	  	  .each(collide(.5))
 	  	  //.style("fill", function(d) { return d.color; })
 	      .attr({

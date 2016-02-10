@@ -1,6 +1,6 @@
 angular.module("content-slider-directive", [])
 
-.directive("contentSlider", ["$stateParams", function($stateParams) {
+.directive("contentSlider", ["$stateParams", "$state", function($stateParams, $state) {
 	return {
 		restrict: "E",
 		scope: {
