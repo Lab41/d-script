@@ -36,7 +36,7 @@ def load_verbatimnet( layer, params='/fileserver/iam/iam-processed/models/fiel_1
 
 ## Corpus operator --------------------------
 # Extract features over the entire corpus. Takes in the flat hdf5 file.
-def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20), varthresh=None ):
+def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20), compthresh=None ):
 
     # Image files
     hdf5file=h5py.File(hdf5name)
@@ -51,7 +51,7 @@ def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20), var
 
         # Collect the inputs for the image
         for shard in StepShingler(img, hstep=steps[1], vstep=steps[0], shingle_size=shingle_dims):
-            if varthresh and np.var(shard) < varthresh:
+            if compthresh and shard.sum() < compthresh:
                 continue
             shard = np.expand_dims(shard,0)
             shards += [shard]

@@ -17,6 +17,8 @@ from keras.optimizers import SGD
 from keras.utils.np_utils import to_categorical
 from keras.layers.normalization import BatchNormalization as BN
 
+from noisenet import basic_model, conv2_model
+
 # Shingle, horizontal, and vertical step sizes
 ss = (56,56)
 hs = 30
@@ -32,26 +34,12 @@ def load_verbatimnet( layer, params='/fileserver/iam/iam-processed/models/fiel_1
     
     return vnet
 
-def load_denoisenet(shingle_dim):
-    model = Sequential()
-    model.add(Convolution2D(24, 6, 6,
-                        border_mode='valid',
-                        input_shape=(1, shingle_dim[0], shingle_dim[1])))
-    model.add(Activation('relu'))
-    model.add(Flatten())
-    model.add(Dense(1000))
-    model.add(Dense(np.prod(shingle_dim)))
-    model.add(Activation('sigmoid'))
-
-    print "Compiling model"
-    sgd = SGD(lr=0.1, decay=1e-6, momentum=0.7, nesterov=False)
-    model.compile(loss='mse', optimizer=sgd)
-    print "Finished compilation"
-    model.load_weights('linet.hdf5')
+def load_denoisenet(shingle_dim=(56,56)):
+    model=conv2_model()
+    model.load_weights('conv2_linet.hdf5')
     return model
 
-
-def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20), varthresh=None ):
+def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20), varthresh=250 ):
 
     # Image files
     hdf5file=h5py.File(hdf5name)
@@ -70,15 +58,22 @@ def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20), var
         # Collect the inputs for the image
         for shard in StepShingler(img, hstep=steps[1], vstep=steps[0], shingle_size=shingle_dims):
             shard = np.expand_dims(shard,0)
+            if varthresh and shard.sum() < varthresh/4.0:
+                continue
             shards += [shard]
           
         shards = np.array(shards)
-        finstop
-        shards = noisenet.predict(shards)
+        shardsize = shards.shape
+
+        print "Denoising network predicting on shards"
+        sys.stdout.flush()
+        shards = noisenet.predict(shards, verbose=1)
+        shards = shards.reshape( shardsize )
+        if varthresh:
+            shards = np.array([ shard for shard in shards if shard.sum() > varthresh ])
         
         print "Loaded %d shards in and predicting on image %s" %(len(shards), imname)
         sys.stdout.flush()
-
         # Predict the neural network and append the mean of features to overall imfeatures
         if len(shards)!=0:
             features = network.predict( shards, verbose=1 )
