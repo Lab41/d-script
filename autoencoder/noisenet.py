@@ -52,12 +52,12 @@ def basic_model( shingle_dim=(70,70) ):
 def conv2_model( shingle_dim=(56,56) ):
 
     model = Sequential()
-    model.add(Convolution2D(24, 6, 6,
+    model.add(Convolution2D(64, 6, 6,
                             border_mode='valid',
                             input_shape=(1, shingle_dim[0], shingle_dim[1])))
     model.add(Activation('relu'))
 
-    model.add(Convolution2D(36, 4, 4,
+    model.add(Convolution2D(128, 4, 4,
                             border_mode='valid'))
     model.add(Activation('relu')) 
     model.add(Flatten())
