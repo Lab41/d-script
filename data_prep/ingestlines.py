@@ -143,7 +143,7 @@ def iam2hdf5_forms( forms_txt, author_forms_hdf5, forms_hdf5=None, from_form=Fal
     Make HDF5 files from forms
     '''
     author2form, form2author = create_dictionaries( forms_txt )
-    form_unproc = open(froms_txt,'r').read().splitlines()
+    form_unproc = open(forms_txt,'r').read().splitlines()
     lines=[]
     af_fout = h5py.File(author_forms_hdf5,'w')
     if forms_hdf5:
@@ -205,7 +205,7 @@ def icdar13_hdf5( icdar13path, author_images_hdf5, images_hdf5 = None ):
         if images_hdf5:
             data_group = i_fout.create_dataset( the_file, data=the_image.astype(numpy.uint8) )
             data_group.attrs.create( 'author', the_author )
-        print "Finished image read and write of file "+the_file+" to "+author_words_file+" and "+words_file
+        print "Finished image read and write of file "+the_file+" to "+author_words_file+" and "+images_hdf5
         sys.stdout.flush()
 
     i_fout.close()
