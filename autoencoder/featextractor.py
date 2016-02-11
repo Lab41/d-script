@@ -39,7 +39,7 @@ def load_denoisenet(shingle_dim=(56,56)):
     model.load_weights('conv2_linet.hdf5')
     return model
 
-def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20), varthresh=250 ):
+def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20), varthresh=250.0 ):
 
     # Image files
     hdf5file=h5py.File(hdf5name)
@@ -58,7 +58,7 @@ def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20), var
         # Collect the inputs for the image
         for shard in StepShingler(img, hstep=steps[1], vstep=steps[0], shingle_size=shingle_dims):
             shard = np.expand_dims(shard,0)
-            if varthresh and shard.sum() < varthresh/4.0:
+            if varthresh and shard.sum() < varthresh:
                 continue
             shards += [shard]
           
@@ -66,6 +66,10 @@ def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20), var
         shardsize = shards.shape
 
         print "Denoising network predicting on shards"
+        if len(shards)==0:
+            imfeatures = np.concatenate( (imfeatures, np.zeros((1,4096))) )
+            print "ERROR: "+imname+" has ZERO shards as input; continuing"
+            continue
         sys.stdout.flush()
         shards = noisenet.predict(shards, verbose=1)
         shards = shards.reshape( shardsize )

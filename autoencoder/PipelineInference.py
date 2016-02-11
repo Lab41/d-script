@@ -4,11 +4,18 @@ import sys
 import logging
 sys.path.append('..')
 
+#pdb
+
 # Neural network stuff
 from fielutil import load_verbatimnet
 from featextractor import extract_imfeats
 
+# Logging
+# logging.getLogger('featextractor').setLevel(logging.DEBUG)
+
 # ### Parameters
+
+# In[2]:
 
 # Do you want to load the features in? Or save them to a file?
 load_features = False
@@ -17,13 +24,12 @@ load_features = False
 # hdf5images='icdar13data/benchmarking-processed/icdar_be.hdf5'
 # hdf5images = 'icdar13data/experimental-processed/icdar13_ex.hdf5'
 # hdf5images='nmecdata/nmec_scaled_flat.hdf5'
-hdf5images='nmecdata/flat_nmec_bin_uint8.hdf5'
+hdf5images='/fileserver/nmec-handwriting/flat_nmec_bin_uint8.hdf5'
 
 # This is the file that you will load the features from or save the features to
 # featurefile = 'icdar13data/benchmarking-processed/icdar13be_fiel657.npy'
 # featurefile = 'icdar13data/experimental-processed/icdar13ex_fiel657.npy'
-# featurefile = 'nmecdata/nmec_bw_fiel657_features_steps5_thresh.0025.npy'
-featurefile = 'nmecdata/nmec_bw_fiel657_features_steps5_thresh.15.npy'
+featurefile = '/fileserver/nmec-handwriting/check.15.npy'
 
 # This is the neural networks and parameters you are deciding to use
 paramsfile = '/fileserver/iam/iam-processed/models/fiel_657.hdf5'
@@ -33,18 +39,25 @@ paramsfile = '/fileserver/iam/iam-processed/models/fiel_657.hdf5'
 # 
 # Each entry in the HDF5 file is a full image/form/document
 
+# In[3]:
+
 labels = h5py.File(hdf5images).keys()
 
 
 # ### Load feature extractor neural network
-if not load_features:
-   vnet = load_verbatimnet( 'fc7', paramsfile=paramsfile )
-   vnet.compile(loss='mse', optimizer='sgd')
+
+# In[ ]:
+
+vnet = load_verbatimnet( 'fc7', paramsfile=paramsfile )
+vnet.compile(loss='mse', optimizer='sgd')
+print "Finished loading neural network in and compilation"
 
 
 # ### Image features
 # 
 # Currently taken as averages of all shard features in the image. You can either load them or extract everything manually, depending on if you have the .npy array.
+
+# In[ ]:
 
 if load_features:
     print "Loading features in from "+featurefile
@@ -52,12 +65,14 @@ if load_features:
     print "Loaded features"
 else:
     print "Begin extracting features from "+hdf5images
-    imfeats = extract_imfeats( hdf5images, vnet, steps=(5,5), varthresh=0.05 )
+    imfeats = extract_imfeats( hdf5images, vnet, steps=(5,5), varthresh=250.0 )
     print h5py.File(hdf5images).keys()
     np.save( featurefile, imfeats )
 
 
 # ### Build classifier
+
+# In[ ]:
 
 imfeats = ( imfeats.T / np.linalg.norm( imfeats, axis=1 ) ).T
 F = imfeats.dot(imfeats.T)
@@ -66,12 +81,14 @@ np.fill_diagonal( F , -1 )
 
 # ### Evaluate classifier on HDF5 file (ICDAR 2013)
 
+# In[ ]:
+
 # Top k (soft criteria)
 k = 10
 # Max top (hard criteria)
 maxtop = 2
 # Number of examples per image
-g = 4
+g = 8
 
 # Run through the adjacency matrix
 softcorrect = 0
