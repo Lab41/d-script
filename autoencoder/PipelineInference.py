@@ -29,7 +29,7 @@ hdf5images='/fileserver/nmec-handwriting/flat_nmec_bin_uint8.hdf5'
 # This is the file that you will load the features from or save the features to
 # featurefile = 'icdar13data/benchmarking-processed/icdar13be_fiel657.npy'
 # featurefile = 'icdar13data/experimental-processed/icdar13ex_fiel657.npy'
-featurefile = '/fileserver/nmec-handwriting/check.15.npy'
+featurefile = '/fileserver/nmec-handwriting/nmec_bw.deNN_fiel657.step5_noE.npy'
 
 # This is the neural networks and parameters you are deciding to use
 paramsfile = '/fileserver/iam/iam-processed/models/fiel_657.hdf5'
@@ -65,7 +65,7 @@ if load_features:
     print "Loaded features"
 else:
     print "Begin extracting features from "+hdf5images
-    imfeats = extract_imfeats( hdf5images, vnet, steps=(5,5), varthresh=250.0 )
+    imfeats = extract_imfeats( hdf5images, vnet, steps=(5,5), varthresh=None )
     print h5py.File(hdf5images).keys()
     np.save( featurefile, imfeats )
 
