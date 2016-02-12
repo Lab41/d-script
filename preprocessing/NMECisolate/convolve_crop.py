@@ -53,7 +53,7 @@ def crop_using_heatmap(orig_im, heat2d):
     # non-text space
     # 400 == after this many rows of being in e.d. non-text space, cut off the rest
     i = decide_cutoff(run_med, max(run_med), np.median(heat1d), max_raw / 2.0, 50, 400)
-    return orig_im[0:i, :], i
+    return orig_im[0:i, :], i, orig_im[i:,:]
 
 
 def create_heatmap(im):
@@ -71,5 +71,5 @@ def create_heatmap(im):
 
 def create_cropped_np_arr_from_orig(np_arr_input_im):
     heat2d = create_heatmap(np_arr_input_im)
-    cropped, i = crop_using_heatmap(np_arr_input_im, heat2d)
-    return cropped
+    cropped, i, discarded = crop_using_heatmap(np_arr_input_im, heat2d)
+    return cropped, i, discarded
