@@ -24,10 +24,10 @@ ss = (56,56)
 hs = 30
 vs = 30
 
-def load_verbatimnet( layer, params='/fileserver/iam/iam-processed/models/fiel_1k.hdf5' ):
+def load_verbatimnet( layer, input_shape=(1,56,56) params='/fileserver/iam/iam-processed/models/fiel_1k.hdf5' ):
 
     print "Establishing Fiel's verbatim network"
-    vnet = verbatimnet(layer)
+    vnet = verbatimnet(layer=layer, input_shape=input_shape)
     loadparams( vnet, params )
     vnet.compile( loss='mse', optimizer='sgd' )
     print "Compiled neural network up to FC7 layer"    
@@ -36,7 +36,7 @@ def load_verbatimnet( layer, params='/fileserver/iam/iam-processed/models/fiel_1
 
 def load_denoisenet(shingle_dim=(56,56)):
     model=conv2_model()
-    model.load_weights('conv2_linet.hdf5')
+    model.load_weights('conv2_linet_icdar-ex.hdf5')
     return model
 
 def extract_imfeats( hdf5name, network, shingle_dims=(56,56), steps=(20,20), varthresh=250.0 ):

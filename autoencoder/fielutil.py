@@ -151,8 +151,7 @@ def tfdnet( hdf5file, layer='softmax', compile=False ):
 
     return model
 
-    
-def verbatimnet( layer='softmax', compiling=False ):
+def verbatimnet( layer='softmax', input_shape=(1,56,56), compiling=False ):
     
     layers = ['conv1', 'conv2', 'conv3', 'conv4', 'conv5',
               'fc6', 'fc7', 'softmax']
@@ -160,7 +159,7 @@ def verbatimnet( layer='softmax', compiling=False ):
     model = Sequential()
     model.add(Convolution2D(96, 11, 11,
                             border_mode='valid', subsample=(4,4),
-                            input_shape=(1, 56, 56),
+                            input_shape=input_shape,
                             activation='relu'))
     model.add(MaxPooling2D(pool_size=(2,2)))
 
@@ -213,10 +212,10 @@ def loadparams( model, hdf5file ):
     params.close()
     
     
-def load_verbatimnet( layer, paramsfile = '/fileserver/iam/iam-processed/models/fiel_1k.hdf5', compiling=False ):
+def load_verbatimnet( layer, input_shape=(1,56,56), paramsfile = '/fileserver/iam/iam-processed/models/fiel_1k.hdf5', compiling=False ):
 
     print "Establishing Fiel's verbatim network"
-    vnet = verbatimnet(layer,compiling=compiling)
+    vnet = verbatimnet(layer,input_shape=input_shape,compiling=compiling)
     loadparams( vnet, paramsfile )
     print "Loaded neural network up to "+layer+" layer"    
     
