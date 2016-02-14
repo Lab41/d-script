@@ -44,7 +44,7 @@ if not load_features:
 
 ### Image features
 # Currently taken as averages of all shard features in the image. You can either load them or extract everything manually, depending on if you have the .npy array.
-outdir='/fileserver/nmec-handwriting/localfeatures/nmec_fiel657_iam_step20/'
+outdir='/fileserver/nmec-handwriting/localfeatures/nmec_bw.deNNiam_fiel657.steps5_mean250/'
 if load_features:
     print "Loading features in from "+featurefile
     imfeats = np.load(featurefile)

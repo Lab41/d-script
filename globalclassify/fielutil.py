@@ -292,3 +292,8 @@ def conv2_model( shingle_dim=(56,56) ):
     return model
 
 
+def load_denoisenet(shingle_dim=(56,56)):
+    model=conv2_model()
+    model.load_weights('conv2_linet_icdar-ex.hdf5')
+    return model
+
