@@ -61,12 +61,10 @@ def extract_imfeats( hdf5name, network, outdir=None, denoiser=None, shingle_dims
 
         # Collect the inputs for the image
         for shard in StepShingler(img, hstep=steps[1], vstep=steps[0], shingle_size=shingle_dims):
-            shard = np.expand_dims(shard,0)
             if compthresh and shard.sum() < compthresh:
                 continue
             shard = np.expand_dims(shard,0)
             shards += [shard]
-          
         shards = np.array(shards)
         shardsize = shards.shape
 
