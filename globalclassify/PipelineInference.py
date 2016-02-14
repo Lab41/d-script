@@ -5,11 +5,10 @@ import logging
 sys.path.append('..')
 
 # Neural network stuff
-from fielutil import load_verbatimnet
+from fielutil import load_verbatimnet, load_denoisenet
 from featextractor import extract_imfeats
 
-# ### Parameters
-
+### Parameters
 # Do you want to load the features in? Or save them to a file?
 load_features = False
 
@@ -25,16 +24,15 @@ hdf5images='/fileserver/nmec-handwriting/flat_nmec_cropped_bin_uint8.hdf5'
 # featurefile = 'icdar13data/experimental-processed/icdar13ex_fiel657.npy'
 # featurefile = 'nmecdata/nmec_bw_fiel657_features_steps5_thresh.0025.npy'
 # featurefile = 'nmecdata/nmec_bw_fiel657_features_steps5_thresh.005.npy'
-featurefile = '/fileserver/nmec-handwriting/nmec_cropped_fiel657_features_steps5_thresh.005.npy'
+# featurefile = '/fileserver/nmec-handwriting/nmec_cropped_fiel657_features_steps5_thresh.005.npy'
+featurefile = '/fileserver/nmec-handwriting/nmec_bw.deNNiam_fiel657.steps5_mean250.hdf5'
 
 # This is the neural networks and parameters you are deciding to use
 paramsfile = '/fileserver/iam/iam-processed/models/fiel_657.hdf5'
 
 
-# ### Full image HDF5 file
-# 
+### Full image HDF5 file
 # Each entry in the HDF5 file is a full image/form/document
-
 labels = h5py.File(hdf5images).keys()
 
 
@@ -44,8 +42,7 @@ if not load_features:
    vnet.compile(loss='mse', optimizer='sgd')
 
 
-# ### Image features
-# 
+### Image features
 # Currently taken as averages of all shard features in the image. You can either load them or extract everything manually, depending on if you have the .npy array.
 outdir='/fileserver/nmec-handwriting/localfeatures/nmec_fiel657_iam_step20/'
 if load_features:
@@ -54,13 +51,12 @@ if load_features:
     print "Loaded features"
 else:
     print "Begin extracting features from "+hdf5images
-    imfeats = extract_imfeats( hdf5images, vnet, outdir=outdir, steps=(10,10), compthresh=250 )
+    imfeats = extract_imfeats( hdf5images, vnet, denoiser=load_denoisenet(), outdir=outdir, steps=(10,10), compthresh=250 )
     print h5py.File(hdf5images).keys()
     np.save( featurefile, imfeats )
 
 
 # ### Build classifier
-
 imfeats = ( imfeats.T / np.linalg.norm( imfeats, axis=1 ) ).T
 F = imfeats.dot(imfeats.T)
 np.fill_diagonal( F , -1 )
