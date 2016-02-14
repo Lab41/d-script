@@ -25,7 +25,7 @@ vs = 30
 
 ## Neural Networks --------------------------
 # Load the verbatim neural network feature extractor (up to FC7 layer)
-def load_verbatimnet( layer, input_shape=(1,56,56) params='/fileserver/iam/iam-processed/models/fiel_1k.hdf5' ):
+def load_verbatimnet( layer, input_shape=(1,56,56), params='/fileserver/iam/iam-processed/models/fiel_1k.hdf5' ):
 
     print "Establishing Fiel's verbatim network"
     vnet = verbatimnet(layer=layer, input_shape=input_shape)
