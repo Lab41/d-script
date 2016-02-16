@@ -25,7 +25,8 @@ hdf5images='/fileserver/nmec-handwriting/flat_nmec_cropped_bin_uint8.hdf5'
 # featurefile = 'nmecdata/nmec_bw_fiel657_features_steps5_thresh.0025.npy'
 # featurefile = 'nmecdata/nmec_bw_fiel657_features_steps5_thresh.005.npy'
 # featurefile = '/fileserver/nmec-handwriting/nmec_cropped_fiel657_features_steps5_thresh.005.npy'
-featurefile = '/fileserver/nmec-handwriting/nmec_bw.deNNiam_fiel657.steps5_mean250.hdf5'
+featurefile = '/fileserver/nmec-handwriting/globalfeatures/nmec_bw_crop.deNNam_fiel657.steps5_mean250.hdf5'
+outdir='/fileserver/nmec-handwriting/localfeatures/nmec_bw_crop.deNNiam_fiel657.steps5_mean250/'
 
 # This is the neural networks and parameters you are deciding to use
 paramsfile = '/fileserver/iam/iam-processed/models/fiel_657.hdf5'
@@ -44,14 +45,14 @@ if not load_features:
 
 ### Image features
 # Currently taken as averages of all shard features in the image. You can either load them or extract everything manually, depending on if you have the .npy array.
-outdir='/fileserver/nmec-handwriting/localfeatures/nmec_bw.deNNiam_fiel657.steps5_mean250/'
 if load_features:
     print "Loading features in from "+featurefile
     imfeats = np.load(featurefile)
     print "Loaded features"
 else:
     print "Begin extracting features from "+hdf5images
-    imfeats = extract_imfeats( hdf5images, vnet, denoiser=load_denoisenet(), outdir=outdir, steps=(10,10), compthresh=250 )
+    imfeats = extract_imfeats( hdf5images, vnet, denoiser=load_denoisenet(noiseparams='conv2_linet_iam-bin.hdf5'), 
+			       outdir=outdir, steps=(5,5), compthresh=250 )
     print h5py.File(hdf5images).keys()
     np.save( featurefile, imfeats )
 
@@ -66,7 +67,7 @@ np.fill_diagonal( F , -1 )
 # Top k (soft criteria)
 k = 10
 # Max top (hard criteria)
-maxtop = 2
+maxtop = 3
 # Number of examples per image
 g = 8
 
@@ -81,7 +82,9 @@ for j, i in enumerate(F):
         softcorrect += 1
     totalnum +=1
     # Hard criteria
-    hardcorrect+= sum([1 for jj in (j/g == topk[-maxtop:]/g) if jj])
+    hardvalues = sum([1 for jj in (j/g == topk[-maxtop:]/g) if jj])
+    if hardvalues == maxtop:
+	hardcorrect += 1
     
 # Print out results    
 print "Top %d (soft criteria) = %f" %( k, (softcorrect+0.0) / totalnum )
