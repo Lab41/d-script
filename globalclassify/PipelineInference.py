@@ -51,8 +51,9 @@ if load_features:
     print "Loaded features"
 else:
     print "Begin extracting features from "+hdf5images
-    imfeats = extract_imfeats( hdf5images, vnet, denoiser=load_denoisenet(noiseparams='conv2_linet_iam-bin.hdf5'), 
-			       outdir=outdir, steps=(5,5), compthresh=250 )
+    noiseparamfile = '/work/code/repo/models/conv2_linet_iam-bin.hdf5'
+    imfeats = extract_imfeats(hdf5images, vnet, denoiser=load_denoisenet(noiseparams=noiseparamfile), 
+                              outdir=outdir, steps=(5,5), compthresh=250 )
     print h5py.File(hdf5images).keys()
     np.save( featurefile, imfeats )
 

@@ -79,13 +79,11 @@ def conv2p_model( shingle_dim=(56,56) ):
                             border_mode='valid',
                             input_shape=(1, shingle_dim[0], shingle_dim[1])))
     model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
 
     model.add(Convolution2D(128, 4, 4,
                             border_mode='valid'))
     model.add(Activation('relu')) 
     model.add(MaxPooling2D(pool_size=(2, 2)))
-    
     model.add(Flatten())
     model.add(Dense(1024))
     model.add(Dense(np.prod(shingle_dim)))
