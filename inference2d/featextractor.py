@@ -94,7 +94,7 @@ def extract_imfeats( hdf5name, network, outdir=None, denoiser=None, shingle_dims
 	
         if outdir:
             print "Saving to "+outdir+imname+".npy" 
-            np.save( outdir+imname+'.npy' , shards)
+            np.save( outdir+imname+'.npy' , features )
 
     return imfeatures
 
