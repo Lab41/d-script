@@ -17,10 +17,10 @@ from keras.layers.normalization import BatchNormalization as BN
 
 import matplotlib.pylab as plt
 import sys
-sys.path.append('/work/code/repo/d-script/')
+sys.path.append('../')
 # d-script imports
 from data_iters.minibatcher import MiniBatcher
-from data_iters.iam_hdf5_iterator import IAM_MiniBatcher
+from data_iters.archive.iam_iterator import IAM_MiniBatcher
 
 num_authors=47
 shingle_dim=(120,120)
