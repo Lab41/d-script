@@ -24,7 +24,7 @@ ss = (56,56)
 hs = 30
 vs = 30
 
-def load_verbatimnet( layer, input_shape=(1,56,56) params='/fileserver/iam/iam-processed/models/fiel_1k.hdf5' ):
+def load_verbatimnet( layer, input_shape=(1,56,56), params='/fileserver/iam/iam-processed/models/fiel_1k.hdf5' ):
 
     print "Establishing Fiel's verbatim network"
     vnet = verbatimnet(layer=layer, input_shape=input_shape)
