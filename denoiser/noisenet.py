@@ -130,7 +130,7 @@ def conv3p_model( shingle_dim=(56,56) ):
 def conv4p_model( shingle_dim=(56,56) ):
 
     model = Sequential()
-    model.add(Convolution2D(64, 6, 6,
+    model.add(Convolution2D(128, 6, 6,
                             border_mode='valid',
                             input_shape=(1, shingle_dim[0], shingle_dim[1])))
     model.add(Activation('relu'))
@@ -141,7 +141,7 @@ def conv4p_model( shingle_dim=(56,56) ):
     model.add(Activation('relu')) 
     model.add(MaxPooling2D(pool_size=(2, 2)))
     
-    model.add(Convolution2D(64, 4, 4,
+    model.add(Convolution2D(128, 4, 4,
                             border_mode='valid'))
     model.add(Activation('relu')) 
     
@@ -152,6 +152,10 @@ def conv4p_model( shingle_dim=(56,56) ):
     model.add(Flatten())
     model.add(Dense(1024))
     model.add(Activation('relu')) 
+    
+    model.add(Dense(2048))
+    model.add(Activation('relu')) 
+    
     model.add(Dense(np.prod(shingle_dim)))
     model.add(Activation('sigmoid'))
     print "Compiling model"
@@ -198,24 +202,24 @@ def conv4p2_model( shingle_dim=(120,120) ):
 def conv4p2c_model( shingle_dim=(120,120) ):
 
     model = Sequential()
-    model.add(Convolution2D(64, 6, 6,
+    model.add(Convolution2D(64, 4, 4,
                             border_mode='same',
                             input_shape=(1, shingle_dim[0], shingle_dim[1])))
     model.add(Activation('relu'))
 
-    model.add(Convolution2D(128, 4, 4,
+    model.add(Convolution2D(128, 8, 8,
                             border_mode='same'))
     model.add(Activation('relu')) 
     
-    model.add(Convolution2D(64, 4, 4,
+    model.add(Convolution2D(64, 8, 8,
                             border_mode='same'))
     model.add(Activation('relu')) 
 
-    model.add(Convolution2D(64, 32, 32,
+    model.add(Convolution2D(8, 32, 32,
                             border_mode='same'))
     model.add(Activation('relu'))
     
-    model.add(Convolution2D(1, 64, 64, border_mode='same'))
+    model.add(Convolution2D(1, 120, 120, border_mode='same'))
     model.add(Activation('sigmoid'))
     print "Compiling model"
     sgd = SGD(lr=0.1, decay=1e-6, momentum=0.7, nesterov=False)
