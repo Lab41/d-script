@@ -52,7 +52,7 @@ def extract_imfeats( hdf5name, network, outdir=None, denoiser=None, shingle_dims
     imfeatures = np.zeros( (0,4096) )
     
     if outdir and not outdir[-1]=='/':
-	outdir+='/'
+        outdir+='/'
 
     # Loop through all the images in the HDF5 file
     for imname in hdf5file.keys():
@@ -75,7 +75,7 @@ def extract_imfeats( hdf5name, network, outdir=None, denoiser=None, shingle_dims
             continue
         sys.stdout.flush()
 
-	if denoiser:
+        if denoiser:
             shards = denoiser.predict(shards, verbose=1)
             shards = shards.reshape( shardsize )
 
@@ -89,9 +89,9 @@ def extract_imfeats( hdf5name, network, outdir=None, denoiser=None, shingle_dims
             features = network.predict( shards, verbose=1 )
             imfeatures = np.concatenate( (imfeatures, np.expand_dims(features.mean(axis=0),0)) )
         else:
-	    features = np.zeros((1,4096))
+            features = np.zeros((1,4096))
             imfeatures = np.concatenate( (imfeatures, np.zeros((1,4096))) )
-	
+        
         if outdir:
             print "Saving to "+outdir+imname+".npy" 
             np.save( outdir+imname+'.npy' , features )
