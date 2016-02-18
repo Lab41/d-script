@@ -11,7 +11,6 @@ line_path = 'data/lines/'
 word_path = 'data/words/'
 
 ### IAM DATASET ###
-
 def create_dictionaries( forms_txt ):
     
     '''
@@ -257,8 +256,8 @@ def nmec_bw_hdf5( nmecpath, author_words_file, images_hdf5 = None, scale=0.5 ):
     ai_fout.close()
 
 nmecpath='/fileserver/nmec-handwriting/stil-writing-corpus-processed/cropcrop/'
-author_words_file='author_nmec_cropped_uint8.hdf5'
-images_hdf5='flat_nmec_cropped_uint8.hdf5'
+author_words_file='author_nmec_cropped_bin_uint8.hdf5'
+images_hdf5='flat_nmec_cropped_bin_uint8.hdf5'
 def nmec_cropped_hdf5( nmecpath, author_words_file, images_hdf5 = None, scale=0.5 ):
     ### ATTENTION. If you want to extract evaluation dataset, change "benchmarking" to that
     icdar13exdir = os.listdir(nmecpath)

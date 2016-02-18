@@ -151,7 +151,6 @@ def tfdnet( hdf5file, layer='softmax', compile=False ):
 
     return model
 
-    
 def verbatimnet( layer='softmax', input_shape=(1,56,56), compiling=False ):
     
     layers = ['conv1', 'conv2', 'conv3', 'conv4', 'conv5',
@@ -213,10 +212,10 @@ def loadparams( model, hdf5file ):
     params.close()
     
     
-def load_verbatimnet( layer, paramsfile = '/fileserver/iam/iam-processed/models/fiel_1k.hdf5', compiling=False ):
+def load_verbatimnet( layer, input_shape=(1,56,56), paramsfile = '/fileserver/iam/iam-processed/models/fiel_1k.hdf5', compiling=False ):
 
     print "Establishing Fiel's verbatim network"
-    vnet = verbatimnet(layer,compiling=compiling)
+    vnet = verbatimnet(layer,input_shape=input_shape,compiling=compiling)
     loadparams( vnet, paramsfile )
     print "Loaded neural network up to "+layer+" layer"    
     
@@ -248,3 +247,4 @@ def extract_imfeats( hdf5name, network ):
         imfeatures = np.concatenate( (imfeatures, np.expand_dims(features.mean(axis=0),0)) )
         
     return imfeatures
+
