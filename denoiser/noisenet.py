@@ -194,3 +194,32 @@ def conv4p2_model( shingle_dim=(120,120) ):
     print "Finished compilation"
 
     return model
+
+def conv4p2c_model( shingle_dim=(120,120) ):
+
+    model = Sequential()
+    model.add(Convolution2D(64, 6, 6,
+                            border_mode='same',
+                            input_shape=(1, shingle_dim[0], shingle_dim[1])))
+    model.add(Activation('relu'))
+
+    model.add(Convolution2D(128, 4, 4,
+                            border_mode='same'))
+    model.add(Activation('relu')) 
+    
+    model.add(Convolution2D(64, 4, 4,
+                            border_mode='same'))
+    model.add(Activation('relu')) 
+
+    model.add(Convolution2D(64, 32, 32,
+                            border_mode='same'))
+    model.add(Activation('relu'))
+    
+    model.add(Convolution2D(1, 64, 64, border_mode='same'))
+    model.add(Activation('sigmoid'))
+    print "Compiling model"
+    sgd = SGD(lr=0.1, decay=1e-6, momentum=0.7, nesterov=False)
+    model.compile(loss='mse', optimizer=sgd)
+    print "Finished compilation"
+
+    return model
