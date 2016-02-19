@@ -63,4 +63,5 @@ target/
 *.hdf5
 *.npy
 *.tgz
+*.swp
 

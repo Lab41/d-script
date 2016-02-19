@@ -2,7 +2,8 @@ var app = angular.module("app", [
     "ui.router",
     "app.controllers",
     "app.directives",
-    "app.services"
+    "app.services",
+    "app.filters"
 ]);
 
 /***********************/
@@ -30,24 +31,20 @@ app.config(function($stateProvider, $urlRouterProvider) {
     // main app (shared structure)
     .state("app", {
         url: "/",
-        abstract: true,
         templateUrl: "templates/main.html",
         controller: "mainCtrl"
     })
     
-    // explore vs explain
-    .state("app.viz", {
-        url: "{type}",
+    // process step
+    .state("app.process", {
+        url: "{step}",
         templateProvider: function($http, $stateParams) {
-            return $http.get("templates/" + $stateParams.type + ".html").then(function(template) {
+            return $http.get("templates/steps/" + $stateParams.step + ".html").then(function(template) {
                 return template.data;
             });
         },
-        controllerProvider: function($stateParams) {
-            return $stateParams.type + "Ctrl"
-        }
+        controller: "stepCtrl"
     })
-
-    $urlRouterProvider.otherwise("/explain");
+    $urlRouterProvider.otherwise("/documents");
 
 });

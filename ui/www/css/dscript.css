@@ -18,60 +18,35 @@
 
 html, body {
     
-    font-size: 120%;
+    font-size: 100%;
     
 }
 
-main {
+hgroup {
     
-    margin-top: 2em;
-    position: relative;
-    width: 90%;
-    
-}
-
-/* state title */
-main > h1 {
-    
-    font-size: 3em;
-    margin-bottom: 1em;
+    background: rgba(0, 0, 0, 0.1);
+    bottom: 0;
+    height: 1em;
+    padding: 60px;
+    position: absolute;
+    width: calc(100% - 120px);
     
 }
 
-canvas {
+h1 {
     
-    display: block;
-    margin-top: 1em;
-    
-}
-
-section {
-    
-    display: flex;
-    margin-bottom: 10em;
-    margin-top: 1em;
-    /*position: relative;*/
+    font-size: 2em;
+    text-align: center;
     
 }
 
 section h1 {
     
-    font-size: 2em;
-    margin-bottom: 0.5em;
-    
-}
-
-article {
-	
-	margin-bottom: 3em;
-	
-}
-
-/* main sections */
-section div {
-    
-    position: relative;
-    width: 100%;
+    bottom: 6em;
+    font-size: 1em;
+    left: 50%;
+    position: absolute;
+    transform: translateX(-50%);
     
 }
 
@@ -127,194 +102,4 @@ stacked-bar-chart .label {
     font-size: 0.5em;
     text-anchor: middle;
     
-}
-
-#imageView {
-    
-    position: absolute;
-    
-}
-
-.grid {
-    
-    align-content: space-between;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    
-}
-
-.grid div {
-    
-    background-position: 0% 0%;
-    background-repeat: no-repeat;
-    background-size: cover;
-    height: 250px;
-    width: 400px;
-    margin: auto;
-    margin-bottom: 1em;
-    
-}
-
-.grid p {
-    
-    background: rgb(35,24,24);
-    color: white;
-    display: inline;
-    padding: 0.5em;
-    position: relative;
-    top: 0.7em;
-    
-}
-
-.slider {
-    
-    height: 825px;
-    overflow: hidden;
-    margin-bottom: 3em;
-    margin-top: 2em;
-    position: relative;
-    width: 100%;
-}
-
-.slide {
-    
-    /*height: 100%;*/
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    left: 0;
-    width: auto;
-    /*width: 100%;
-    
-    /*background-position: 50% 50%;
-    background-repeat: no-repeat;
-    background-size: cover;
-    height: 100%;*/
-
-}
-
-.arrow {
-    
-    fill: currentColor;
-    position: absolute;
-    z-index: 1002;
-    display: block;
-    top: 50%;
-    -webkit-transform: translateY(-50%);
-    -moz-transform: translateY(-50%);
-    -ms-transform: translateY(-50%);
-    -o-transform: translateY(-50%);
-    transform: translateY(-50%);
-    width: 2em;
-    height: 2em;
-    outline: none;
-    cursor: pointer;
-    opacity: 0;
-    transition: 0.2s linear all;
-    
-}
-
-.arrow.prev {
-    
-    left: 1em;
-    
-    -webkit-transform: rotate(-90deg);
-    -moz-transform: rotate(-90deg);
-    -ms-transform: rotate(-90deg);
-    -o-transform: rotate(-90deg);
-    transform: rotate(-90deg);
-    
-    
-}
-
-.arrow.next {
-    
-    right: 1em;
-    
-    -webkit-transform: rotate(90deg);
-    -moz-transform: rotate(90deg);
-    -ms-transform: rotate(90deg);
-    -o-transform: rotate(90deg);
-    transform: rotate(90deg);
-    
-}
-
-.arrow.prev:hover {
-    opacity: 1;
-}
-
-.arrow.next:hover {
-    opacity: 1;
-}
-
-
-
-/*---------------------------------------------------------
-NAV
----------------------------------------------------------*/
-
-.nav {
-    text-align: center;
-    display: block;
-    position: absolute;
-    z-index: 1002;
-    left: 0;
-    bottom: 5em;
-    right: 0;
-    height: 48px;
-}
-
-.nonDraggableImage{
-    -webkit-user-drag: none;
-}
-
-.nav .wrapper {
-    margin: 0 auto;
-    width: 100%;
-    padding: 1em 0 .8em;
-}
-
-.nav ul {
-    margin: 0;
-    width: 100%;
-}
-
-.nav .dot, .nav .dot a {
-    display: inline-block;
-}
-
-.dots .dot {
-    position: relative;
-    margin: 0 8px;
-    width: 12px;
-    height: 12px;
-}
-
-.dots .dot a {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 0.75em;
-    height: 0.75em;
-    text-indent: 150%;
-    white-space: nowrap;
-    overflow: hidden;
-    background: rgb(212,212,212);
-    border: 1px solid currentColor;
-    outline: none;
-    -webkit-box-shadow: none;
-    -moz-box-shadow: none;
-    box-shadow: none;
-    -webkit-border-radius: 50%;
-    -moz-border-radius: 50%;
-    border-radius: 50%;
-    -webkit-transition: background-color 0.25s, border-color 0.25s;
-    -moz-transition: background-color 0.25s, border-color 0.25s;
-    transition: background-color 0.25s, border-color 0.25s;
-}
-
-.dots .dot a.active {
-    border-color: currentColor;
-    background-color: rgb(35,34,34);
 }

@@ -8,8 +8,14 @@ angular.module("data-service", [])
 	// get data
     dataService.getData = function(endpoint, id) {
         
-        // api call for a specific viz data set
-        var apiUrl = urlBase + "/" + endpoint + "/" + id;
+        var apiUrl = urlBase + "/" + endpoint;
+        
+        // check id
+        if (id != null) {
+            
+            apiUrl += "/" + id;
+            
+        };
             
         // call data
         return $http.get(apiUrl).then(function(data) {
