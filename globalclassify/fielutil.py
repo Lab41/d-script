@@ -199,6 +199,42 @@ def verbatimnet( layer='softmax', input_shape=(1,56,56), compiling=False ):
     
     return model
 
+def minifielnet(layer='fclast'):
+    
+    model = Sequential()
+    model.add(Convolution2D(96, 11, 11,
+                            border_mode='valid', subsample=(4,4),
+                            input_shape=(1, 120, 120),
+                            activation='relu'))
+
+    model.add(MaxPooling2D(pool_size=(2,2)))
+
+    model.add(Convolution2D(96, 5, 5, activation='relu', border_mode='same'))
+
+    model.add(MaxPooling2D(pool_size=(2,2)))
+
+    model.add(Convolution2D(256, 3, 3, border_mode = 'same', activation='relu'))
+
+    model.add(Convolution2D(256, 3, 3, border_mode = 'same', activation='relu'))
+    
+    model.add(Convolution2D(256, 3, 3, border_mode = 'same', activation='relu'))
+ 
+    model.add(MaxPooling2D(pool_size=(3, 3)))
+    model.add(Dropout(0.25))
+
+    model.add(Flatten())
+    model.add(Dense(2048, activation='relu'))
+    model.add(Dense(600, activation='relu'))
+    model.add(Dense(300, activation='relu'))
+    
+    if layer=='fclast':
+        return model
+    
+    model.add(Dropout(0.25))
+    model.add(Dense(num_authors))
+    model.add(Activation('softmax'))
+    
+    return model
 
 
 def loadparams( model, hdf5file ):
@@ -220,6 +256,14 @@ def load_verbatimnet( layer, paramsfile = '/fileserver/iam/iam-processed/models/
     loadparams( vnet, paramsfile )
     print "Loaded neural network up to "+layer+" layer"    
     
+    return vnet
+
+def load_minifielnet(layer='fclast', paramsfile='/fileserver/iam/iam-processed/models/fielnet120-auth657-fc300-acc62.hdf5'):
+    print "Establishing MiniNet with 300 dimensional output"
+    vnet = minifielnet(layer)
+    vnet.compile(loss='mse', optimizer='sgd')
+    loadparams( vnet, paramsfile )
+    print "Loaded neural network up to "+layer+" layer"
     return vnet
 
 
@@ -249,7 +293,7 @@ def extract_imfeats( hdf5name, network ):
         
     return imfeatures
 
-def basic_model( shingle_dim=(70,70) ):
+def denoise_basic_model( shingle_dim=(70,70) ):
 
     model = Sequential()
     model.add(Convolution2D(24, 6, 6,
@@ -268,7 +312,7 @@ def basic_model( shingle_dim=(70,70) ):
 
     return model
 
-def conv2_model( shingle_dim=(56,56) ):
+def denoise_conv2_model( shingle_dim=(56,56) ):
 
     model = Sequential()
     model.add(Convolution2D(64, 6, 6,
@@ -291,9 +335,45 @@ def conv2_model( shingle_dim=(56,56) ):
 
     return model
 
+def denoise_conv4p_model( shingle_dim=(120,120) ):
 
-def load_denoisenet(noiseparams='conv2_linet_icdar-ex.hdf5', shingle_dim=(56,56)):
-    model=conv2_model()
+    model = Sequential()
+    model.add(Convolution2D(128, 6, 6,
+                            border_mode='valid',
+                            input_shape=(1, shingle_dim[0], shingle_dim[1])))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+
+    model.add(Convolution2D(128, 4, 4,
+                            border_mode='valid'))
+    model.add(Activation('relu')) 
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    
+    model.add(Convolution2D(128, 4, 4,
+                            border_mode='valid'))
+    model.add(Activation('relu')) 
+    
+    model.add(Convolution2D(64, 4, 4,
+                            border_mode='valid'))
+    model.add(Activation('relu'))
+    
+    model.add(Flatten())
+    model.add(Dense(1024))
+    model.add(Activation('relu')) 
+    
+    model.add(Dense(2048))
+    model.add(Activation('relu')) 
+    
+    model.add(Dense(np.prod(shingle_dim)))
+    model.add(Activation('sigmoid'))
+    print "Compiling model"
+    sgd = SGD(lr=0.1, decay=1e-6, momentum=0.7, nesterov=False)
+    model.compile(loss='mse', optimizer=sgd)
+    print "Finished compilation"
+
+    return model
+
+def load_denoisenet(model, noiseparams='conv2_linet_icdar-ex.hdf5'):
     model.load_weights(noiseparams)
     return model
 

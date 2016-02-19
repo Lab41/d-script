@@ -20,18 +20,18 @@ import matplotlib.pylab as plt
 import sys
 sys.path.append('../../../d-script/')
 # d-script imports
-from data_iters.minibatcher import MiniBatcher
-from data_iters.iam_hdf5_iterator import IAM_MiniBatcher
+# from data_iters.minibatcher import MiniBatcher
+# from data_iters.iam_hdf5_iterator import IAM_MiniBatcher
 
 
 # ### Word level document sharding
 # #### Be sure to set use_form=True due to HDF5 structure
 
 # Read from disk
-# author_hdf5_file = h5py.File('/fileserver/iam/iam-processed/words/author_words.hdf5','r')
-# hdf5_file = h5py.File('/fileserver/iam/iam-processed/words/words.hdf5','r')
-author_hdf5_file='/fileserver/nmec-handwriting/author_nmec_bin_uint8.hdf5'
-hdf5_file='nmecdata/flat_nmec_bin_uint8.hdf5'
+author_hdf5_file = h5py.File('/fileserver/iam/iam-processed/words/author_words.hdf5','r')
+hdf5_file = h5py.File('/fileserver/iam/iam-processed/words/words.hdf5','r')
+# author_hdf5_file=h5py.File('/fileserver/nmec-handwriting/author_nmec_bin_uint8.hdf5')
+# hdf5_file=h5py.File('nmecdata/flat_nmec_bin_uint8.hdf5')
 
 file_list = hdf5_file.keys()
 num_forms_per_author=-1
@@ -102,7 +102,7 @@ def get_batch( author_hdf5_file, author_ids, shingle_size=(120,120), data_size=3
 author_ids = author_list(author_hdf5_file, min_records=num_forms_per_author)
 author_batch, author_truth = get_batch( author_hdf5_file, author_ids )
 num_authors = len(author_ids)
-num_authors = 1000
+num_authors = 657
 shards, authors = get_batch(author_hdf5_file, author_ids)
 shard = shards[0]
 
@@ -173,7 +173,7 @@ if True:
         model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=1, show_accuracy=True, verbose=1) #, validation_data=(X_test, Y_test))
         # model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=1, show_accuracy=True, verbose=1, validation_data=(X_train, Y_train))
         if (batch_iter % 20)==0 and batch_iter != 0:
-            model.save_weights('fielnet-1k.hdf5', overwrite=True)
+            model.save_weights('fielnet120-300.hdf5', overwrite=True)
             
-        model.save_weights('fielnet-1k.hdf5', overwrite=True)
+    model.save_weights('fielnet120-300.hdf5', overwrite=True)
 

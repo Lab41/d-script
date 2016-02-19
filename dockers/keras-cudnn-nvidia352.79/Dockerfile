@@ -16,9 +16,6 @@ RUN cd /tmp && \
     apt-get update && \
     apt-get install -y cuda
 
-# Add to path
-ENV PATH=/usr/local/cuda/bin:$PATH \
-  LD_LIBRARY_PATH=/usr/local/cuda-7.5/lib64:$LD_LIBRARY_PATH
 
 # Install cuDNN v4
 ADD cudnn-7.0-linux-x64-v4.0-rc.tgz /opt/
@@ -37,7 +34,8 @@ RUN apt-get update && apt-get install -y \
 ENV CUDA_ROOT /usr/local/cuda/bin
 # Install bleeding-edge Theano
 RUN pip install --upgrade --no-deps git+git://github.com/Theano/Theano.git
-# Set up .theanorc for CUDA
+# Set up .theanorc for CUDA, theanorc in work directory takes precedence
+ENV THEANORC="/root/.theanorc:/work/.theanorc"
 RUN echo "[global]\ndevice=gpu\nfloatX=float32\n[lib]\ncnmem=0\n[nvcc]\nfastmath=True" > /root/.theanorc
 
 RUN apt-get update && apt-get install -y \
@@ -64,6 +62,13 @@ RUN cd /root && \
 RUN printf '#!/bin/bash\n\njupyter notebook --no-browser --ip="*"' > /bootstrap.sh && \
     chmod +x /bootstrap.sh
 
+# Add CUDA, cuDNN to path
+ENV PATH=/usr/local/cuda/bin:$PATH
+ENV LD_LIBRARY_PATH=/usr/local/cuda-7.5/lib64:/opt/cuda/lib64:$LD_LIBRARY_PATH
+ENV LIBRARY_PATH=/opt/cuda/lib64:$LIBRARY_PATH
+ENV CPATH=/opt/cuda/include:$CPATH
+
 EXPOSE 8888
+
 
 CMD ["/bootstrap.sh"]
