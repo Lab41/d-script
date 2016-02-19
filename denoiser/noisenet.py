@@ -127,6 +127,41 @@ def conv3p_model( shingle_dim=(56,56) ):
 
     return model
 
+
+def conv4p56_model( shingle_dim=(56,56) ):
+
+    model = Sequential()
+    model.add(Convolution2D(64, 6, 6,
+                            border_mode='valid',
+                            input_shape=(1, shingle_dim[0], shingle_dim[1])))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+
+    model.add(Convolution2D(128, 4, 4,
+                            border_mode='valid'))
+    model.add(Activation('relu')) 
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    
+    model.add(Convolution2D(64, 4, 4,
+                            border_mode='valid'))
+    model.add(Activation('relu')) 
+    
+    model.add(Convolution2D(64, 4, 4,
+                            border_mode='valid'))
+    model.add(Activation('relu'))
+    
+    model.add(Flatten())
+    model.add(Dense(1024))
+    model.add(Activation('relu')) 
+    model.add(Dense(np.prod(shingle_dim)))
+    model.add(Activation('sigmoid'))
+    print "Compiling model"
+    sgd = SGD(lr=0.1, decay=1e-6, momentum=0.7, nesterov=False)
+    model.compile(loss='mse', optimizer=sgd)
+    print "Finished compilation"
+
+    return model
+
 def conv4p_model( shingle_dim=(56,56) ):
 
     model = Sequential()
