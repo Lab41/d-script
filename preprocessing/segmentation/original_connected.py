@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from collections import namedtuple
-
+import time
 import h5py
 from scipy import ndimage
 import matplotlib.pylab as plt
@@ -139,7 +139,7 @@ def put_in_shingle(img, shingle_size, pad_value=0., paste_location=None):
     return shingle
 
 
-def extract_features_for_corpus(hdf5group, feature_extractor, shingle_dim, transform=None):
+def extract_features_for_corpus(hdf5group, outputhdf5, feature_extractor, shingle_dim, transform=None):
     ''' Returns a dictionary of features for each dataset in an hdf5 file/group object,
     with options for transformation. 
     
@@ -147,38 +147,63 @@ def extract_features_for_corpus(hdf5group, feature_extractor, shingle_dim, trans
     
     Arguments:
     hdf5group -- HDF5 File/Group object
+    outputhdf5 -- None or HDF5 Group/File object, for saving generated features
     feature_extractor -- function/callable that outputs a numpy array of features
     shingle_dim -- (rows,cols) for size of shingles to generate for inference
     transform -- optional functional/callable with one argument, should output a numpy array the same size as its input
+    
+    Returns
+    a dictionary if outputhdf5 is None, otherwise a pointer to the HDF5 object that was passed in as outputhdf5
     '''
-
-
-    imfeatures = {}
+    
+    if outputhdf5 is None:
+        imfeatures = {}
+    else:
+        imfeatures = outputhdf5
     # Loop through all the images in the HDF5 file
+    t_start = time.time()
     for imname in hdf5group:
         img = hdf5group[imname][()]
-        
+
+
         shards = []
-        
+        t1 = time.time()
         connected_components, cc_info = cc_shingler(img)
+        t2 = time.time()
+        print "Extracted CCs in {}".format(t2-t1)
         shingle_candidates=[put_in_shingle(cc, shingle_size=shingle_dim) for cc in connected_components]
+        t3 = time.time()
+        print "Made uniform shingles in {}".format(t3-t2)
         # Collect the inputs for the image
         for shard in shingle_candidates:
             shard = np.expand_dims(np.expand_dims(shard, 0), 0)
             if transform is not None:
                 shard = transform(shard)
             shards.append(shard)
-            
-        shards_array = np.concatenate(shards)
-        
-        print "Loaded %d shards in and predicting on image %s" %(len(shards), imname)
-        sys.stdout.flush()
+        t4 = time.time()  
+        print "Trasnformed shingles in {}".format(t4-t3)
 
-        # Predict the neural network and add the shingle-wise mean across features to feature hash
-        features = feature_extractor(shards_array)
-        feature=np.expand_dims(features.mean(axis=0),0)
-        imfeatures[imname] = features
+        if len(shards) > 0:
+            shards_array = np.concatenate(shards)
 
+            print "Loaded %d shards in and predicting on image %s" %(len(shards), imname)
+            sys.stdout.flush()
+
+            # Predict the neural network and add the shingle-wise mean across features to feature hash
+            features = feature_extractor(shards_array)
+            feature=np.expand_dims(features.mean(axis=0),0)
+            t5 = time.time()
+            print "Generated features in {}".format(t5-t4)
+            if outputhdf5:
+                imfeatures.create_dataset(imname,data=features)
+            else:
+                imfeatures[imname] = features
+
+        else:
+            imfeatures[imname] = []
+
+    t_end = time.time()
+    print "Total time: {}".format(t_end-t_start)
     return imfeatures
 
 def main():
@@ -201,11 +226,12 @@ def main():
         denoiser.load_weights('/fileserver/iam/models/conv4p_linet56-iambin-tifs.hdf5')
         hdf5file='/fileserver/nmec-handwriting/flat_nmec_bin_uint8.hdf5'
         
-        with h5py.File(hdf5file, "r") as data_file:
-            features = extract_features_for_corpus(data_file,featext_func,shingle_dim=(56,56),transform=denoising_func)
-        with h5py.File("output_features.hdf5", "w") as feature_file:
-            for document_id, document_features in features.iteritems():
-                feature_file.create_dataset(document_id, data=document_features)
+        with h5py.File("/work/output_features.hdf5", "w") as feature_file:
+            with h5py.File(hdf5file, "r") as data_file:
+                features = extract_features_for_corpus(data_file,feature_file,
+                                                       featext_func,shingle_dim=(56,56),
+                                                       transform=denoising_func)
+        
     except Exception as e:
         print e
         pdb.post_mortem()
