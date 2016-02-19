@@ -11,7 +11,7 @@ class MiniBatcher:
 
     def __init__(self, hdf5_file, input_keys, item_getter,
                  batch_size=32, min_fragments=3,
-                 train_pct=.7, test_pct=.2, val_pct=.1, rng_seed=888):
+                 train_pct=.7, test_pct=.2, val_pct=.1, rng_seed=888, rng=None):
         """
         Set up MiniBatcher with replicable train/test/validation
         splitting functionality.
@@ -44,7 +44,10 @@ class MiniBatcher:
         self.test_pct = test_pct
         self.val_pct = val_pct
 
-        self.rng = np.random.RandomState(rng_seed)
+        if rng is None:
+            self.rng = np.random.RandomState(rng_seed)
+        else:
+            self.rng = rng
         logger = logging.getLogger(__name__)
 
         # Unfortunately we have to iterate through a few times to make sure we do this right
