@@ -30,8 +30,8 @@ from data_iters.iam_hdf5_iterator import IAM_MiniBatcher
 # Read from disk
 # author_hdf5_file = h5py.File('/fileserver/iam/iam-processed/words/author_words.hdf5','r')
 # hdf5_file = h5py.File('/fileserver/iam/iam-processed/words/words.hdf5','r')
-author_hdf5_file='/fileserver/nmec-handwriting/author_nmec_bin_uint8.hdf5'
-hdf5_file='nmecdata/flat_nmec_bin_uint8.hdf5'
+author_hdf5_file=h5py.File('/fileserver/nmec-handwriting/author_nmec_bin_uint8.hdf5')
+hdf5_file=h5py.File('nmecdata/flat_nmec_bin_uint8.hdf5')
 
 file_list = hdf5_file.keys()
 num_forms_per_author=-1
