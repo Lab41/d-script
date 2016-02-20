@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+from functools import partial
 import numpy as np
 import h5py
 import sys
@@ -12,6 +15,7 @@ from keras.layers.core import Dense, Activation
 from keras.optimizers import SGD
 from keras.utils.np_utils import to_categorical
 from fielutil import load_verbatimnet, patnet_layers
+from preprocessing.segmentation import original_connected
 
 #from data_iters.archive.iam_iterator import IAM_MiniBatcher
 
@@ -74,7 +78,8 @@ lr = 0.001
 
 # ### Define your model
 # 
-patnet = patnet(num_authors, (1, 56, 56))
+print "Compiling model"
+patnet = patnet_layers(num_authors, (1, 56, 56))
 sgd = SGD(lr=lr, decay=1e-6, momentum=0.9, nesterov=True)
 patnet.compile(loss='categorical_crossentropy', optimizer=sgd)
 print "Finished compilation"
@@ -88,12 +93,11 @@ def randangle(batch):
         newbatch[i]=imangle
     return newbatch
 
-def iam_forms_pre(x, rng, **kwargs):
+def iam_forms_pre(x, **kwargs):
     # Chop the top and bottom off
     x_new = x[700:2700]
-    # rotate
-    x_angle = np.asarray(Image.fromarray(x_new.squeeze()).rotate(7.5*rng.randn()))
-    return x_angle
+
+    return x_new
 
 def iam_forms_post(x, **kwargs):
     x_new = 1 - x/255.
@@ -103,15 +107,15 @@ def iam_forms_post(x, **kwargs):
 # ### Minibatcher (to load in your data for each batch)
 rng = np.random.RandomState(888)
 
-
+print "Getting Data"
 cc_getter = partial(original_connected.connected_component_getter, 
-                    shingle_dim=shingle_size,
+                    shingle_dim=shingle_dim,
                     rng=rng,
                     fill_value=255,
                     preprocess_doc=iam_forms_pre,
                     postprocess=iam_forms_post)
 
-batch_object = Hdf5GetterBatcher(hdf5_path, 
+batch_object = Hdf5GetterBatcher(hdf5authors, 
                      num_authors=num_authors,
                      num_forms_per_author=num_forms_per_author,
                      item_getter=cc_getter,
@@ -121,15 +125,9 @@ batch_object = Hdf5GetterBatcher(hdf5_path,
                      rng=rng)    
 
 
-mini_m = Hdf5GetterBatcher(hdf5authors, num_authors, num_forms_per_author,
-                         preprocess=iam_forms_pre,
-                         postprocess=iam_forms_post,
-                         shingle_dim=shingle_dim, default_mode=MiniBatcher.TRAIN,
-                         batch_size=load_size)
-del mini_m
-
 # ### Train your model for however many specified iterations
 
+print "Starting training"
 # logging.getLogger('data_iters.hdf5_iterator').setLevel(logging.DEBUG)
 for batch_iter in range(iterations):
     (X_train,Y_train) = batch_object.get_train_batch()
@@ -138,7 +136,7 @@ for batch_iter in range(iterations):
     patnet.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=1, show_accuracy=True, verbose=1)
     print "Finished training on the "+str(batch_iter)+"th batch"
     if (batch_iter % 20)==0 and batch_iter != 0:
-        patnet.save_weights('patnet-iam.hdf5', overwrite=True)
+        patnet.save_weights('/work/d-script/weights/patnet-iam.hdf5', overwrite=True)
 
 
 #patnet.fit(X_train, Y_train, batch_size=32, nb_epoch=1, show_accuracy=True, verbose=1)
