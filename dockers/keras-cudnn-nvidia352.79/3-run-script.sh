@@ -14,7 +14,7 @@ __script_path=$(readlink -f $2)
 __command=/opt/script
 __command=$2
 
-echo $__script_path
+echo $__command
 # run image
 docker run -ti \
         --device /dev/nvidiactl:/dev/nvidiactl --device /dev/nvidia-uvm:/dev/nvidia-uvm \
@@ -22,4 +22,4 @@ docker run -ti \
         --volume=$__volume_host:$__volume_cntr \
         --volume=/data/fs4/datasets/:$__volume_data \
         --volume=/dev/shm:/memory \
-        $__image /bin/bash -c $__command
+        $__image /bin/bash -c "$__command"
