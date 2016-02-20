@@ -335,7 +335,7 @@ def denoise_conv2_model( shingle_dim=(56,56) ):
 
     return model
 
-def denoise_conv4p_model( shingle_dim=(120,120) ):
+def denoise_conv4p120_model( shingle_dim=(120,120) ):
 
     model = Sequential()
     model.add(Convolution2D(128, 6, 6,
