@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from collections import namedtuple
+import logging
 import time
 import h5py
 from scipy import ndimage
@@ -17,6 +18,71 @@ from globalclassify.fielutil import load_verbatimnet
 from denoiser.noisenet import conv4p_model
 
 #from globalclassify.featextractor import load_verbatimnet, load_denoisenet
+
+
+# getter function for Hdf5 iterators
+# this getter uses an evil global/local thing to cache components
+components={}
+def connected_component_getter(f, key, shingle_dim,
+                        rng=None,
+                        fill_value=255,
+                        preprocess_doc=None,
+                        postprocess=None,
+                        add_rotation=False,
+                        stdev_threshold=None):
+    global components
+    author,fragment = key
+    key_flat = "{}_{}".format(*key)
+    query_img = f[author][fragment][()]
+    
+    assert stdev_threshold is None
+    assert add_rotation==False
+    
+    # extract components from document if necessary
+    if f.filename not in components:
+        components[f.filename] = {}
+    corpus_components_hash = components[f.filename]
+    if key_flat not in corpus_components_hash:
+        # Preprocess document and shingle (does not offer rng as an argument)
+        if preprocess_doc is not None:
+            query_img=preprocess_doc(query_img)
+        corpus_components_hash[key_flat] = cc_shingler(query_img)
+    document_components, component_info = corpus_components_hash[key_flat]
+    
+    # loop until success
+    for j in range(10000):
+        # pick a random component
+        cc_element=rng.choice(document_components)
+
+        # fiddle
+        cc_element=pad_shingle_top(cc_element, 0.75, pad_value=255)
+
+        for i in range(10000):
+            x_lim = max(1, shingle_dim[1] - cc_element.shape[1])
+            y_lim = max(1, shingle_dim[0] - cc_element.shape[0])
+            new_location=(rng.randint(x_lim), rng.randint(y_lim)) 
+            try:
+                cc_element=put_in_shingle(cc_element, shingle_dim, pad_value=fill_value,
+                                 paste_location=new_location)
+            except ValueError as e:
+                if str(e)=="Blank shingle":
+                    logger = logging.getLogger(__name__)
+                    logging.debug("Blank shingle")
+                    continue
+                else:
+                    raise
+            break
+        if cc_element.shape!=shingle_dim:
+            continue
+        else:
+            break
+        
+    if postprocess is not None:
+        cc_element=postprocess(cc_element, rng=rng)
+    
+    return cc_element
+
+
 
 ShingleInfo=namedtuple('ShingleInfo', ['area',
                                        'aspect_ratio', 
@@ -106,20 +172,20 @@ def cc_shingler(img):
         # prune
         if shingle_stats.area > 250 and \
             shingle_stats.aspect_ratio < 4 and \
+            shingle_stats.aspect_ratio > 0.25 and \
             shingle_stats.area < 10000:
                 connected_components.append(cc_shingle)
                 component_info.append(shingle_stats)
     return connected_components, component_info
 
-def pad_shingle_top(shingle, midline_target=0.75):
+def pad_shingle_top(shingle, midline_target=0.75, pad_value=0.):
     ''' Zero-pad the top of shingle so that the row-wise center of gravity is 
     at or below a predetermined proportion of the number of rows.'''
     
     shingle_info=get_shingle_info(shingle)
     rows_to_add=int(midline_target * shingle.shape[0] - shingle_info.center_y)
-    print rows_to_add
     if rows_to_add > 0:
-        new_shingle = np.concatenate((np.zeros((rows_to_add,shingle.shape[1])),
+        new_shingle = np.concatenate((np.ones((rows_to_add,shingle.shape[1])) * pad_value,
                                       shingle))
         return new_shingle
     return shingle
@@ -132,10 +198,38 @@ def put_in_shingle(img, shingle_size, pad_value=0., paste_location=None):
         paste_location = (0,0)
     # assume that paste_location is the upper lefthand corner
     # haven't done the math otherwise
-    assert paste_location == (0,0)
-    img_slice=(slice(0,np.min((shingle_size[0], img.shape[0]))), slice(0,np.min((shingle_size[1], img.shape[1]))))
-    shingle_slice=img_slice
+    #assert paste_location == (0,0)
+    
+    paste_x, paste_y = paste_location
+    img_height, img_width = img.shape
+    shingle_height, shingle_width = shingle_size
+    img_left, img_right = \
+        sorted((0 if paste_x >= 0 else paste_x + img_width,
+               img_width if paste_x + img_width < shingle_width
+                   else shingle_width - paste_x))
+    img_top, img_bottom = \
+        sorted((0 if paste_y >= 0 else paste_y + img_height,
+               img_height if paste_y + img_height < shingle_height
+                   else shingle_height - paste_y))
+        
+    shingle_left, shingle_right = \
+        sorted((paste_x if paste_x > 0 else 0,
+               paste_x + img_width if paste_x + img_width < shingle_width
+                   else shingle_width))
+    shingle_top, shingle_bottom = \
+        sorted((paste_y if paste_y > 0 else 0,
+               paste_y + img_height if paste_y + img_height < shingle_height
+                   else shingle_height))
+   
+    img_slice=(slice(img_top,img_bottom), slice(img_left,img_right))
+    shingle_slice=(slice(shingle_top,shingle_bottom), slice(shingle_left,shingle_right))
+   
+    if not (img[img_slice] != pad_value).any():
+        # aint got nothing in it
+        raise ValueError("Blank shingle")
+        
     shingle[shingle_slice] = img[img_slice]
+
     return shingle
 
 

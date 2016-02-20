@@ -236,6 +236,35 @@ def minifielnet(layer='fclast'):
     
     return model
 
+def patnet_layers(num_outputs, input_shape):
+    '''Modified Fielnet without such large FC layers'''
+    model = Sequential()
+    model.add(Convolution2D(96, 11, 11,
+                            border_mode='valid', subsample=(4,4),
+                            input_shape=input_shape,
+                            activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2,2)))
+
+    model.add(Convolution2D(96, 5, 5, activation='relu', border_mode='same'))
+    model.add(MaxPooling2D(pool_size=(2,2)))
+
+    model.add(Convolution2D(256, 3, 3, border_mode = 'same', activation='relu'))
+
+    model.add(Convolution2D(256, 3, 3, border_mode = 'same', activation='relu'))
+
+    model.add(Convolution2D(256, 3, 3, border_mode = 'same', activation='relu'))
+    model.add(MaxPooling2D(pool_size=(3, 3)))
+    model.add(Dropout(0.25))
+
+    model.add(Flatten())
+
+    model.add(Dense(150, activation='relu'))
+    model.add(Dropout(0.25))
+
+    model.add(Dense(num_outputs))
+    model.add(Activation('softmax'))
+    
+    return model
 
 def loadparams( model, hdf5file ):
     
