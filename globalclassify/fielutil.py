@@ -271,7 +271,7 @@ def fiel120(layer='fclast'):
     model = Sequential()
     model.add(Convolution2D(96, 11, 11,
                             border_mode='valid', subsample=(4,4),
-                            input_shape=(1, shingle_dim[0], shingle_dim[1]),
+                            input_shape=(1, 120, 120),
                             activation='relu'))
     
     model.add(MaxPooling2D(pool_size=(2,2)))
