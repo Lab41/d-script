@@ -28,19 +28,20 @@ sys.path.append('../../../d-script/')
 # #### Be sure to set use_form=True due to HDF5 structure
 
 # Read from disk
-author_hdf5_file = h5py.File('/fileserver/iam/iam-processed/words/author_words.hdf5','r')
-hdf5_file = h5py.File('/fileserver/iam/iam-processed/words/words.hdf5','r')
-# author_hdf5_file=h5py.File('/fileserver/nmec-handwriting/author_nmec_bin_uint8.hdf5')
-# hdf5_file=h5py.File('nmecdata/flat_nmec_bin_uint8.hdf5')
+if False:
+    author_hdf5_file = h5py.File('/fileserver/iam/iam-processed/words/author_words.hdf5','r')
+    hdf5_file = h5py.File('/fileserver/iam/iam-processed/words/words.hdf5','r')
+    # author_hdf5_file=h5py.File('/fileserver/nmec-handwriting/author_nmec_bin_uint8.hdf5')
+    # hdf5_file=h5py.File('nmecdata/flat_nmec_bin_uint8.hdf5')
 
-file_list = hdf5_file.keys()
-num_forms_per_author=-1
-shingle_dim=(120,120)
-use_form=True
+    file_list = hdf5_file.keys()
+    num_forms_per_author=-1
+    shingle_dim=(120,120)
+    use_form=True
 
-batch_size=32
-lr = 0.01
-total_iters=10000
+    batch_size=32
+    lr = 0.01
+    total_iters=10000
 
 
 # ### Call the minibatcher and check the data
@@ -98,19 +99,17 @@ def get_batch( author_hdf5_file, author_ids, shingle_size=(120,120), data_size=3
 
 
 # ### Setup batch system to get authors
-
-author_ids = author_list(author_hdf5_file, min_records=num_forms_per_author)
-author_batch, author_truth = get_batch( author_hdf5_file, author_ids )
-num_authors = len(author_ids)
-num_authors = 657
-shards, authors = get_batch(author_hdf5_file, author_ids)
-shard = shards[0]
-
+if False:
+    author_ids = author_list(author_hdf5_file, min_records=num_forms_per_author)
+    author_batch, author_truth = get_batch( author_hdf5_file, author_ids )
+    num_authors = len(author_ids)
+    num_authors = 657
+    shards, authors = get_batch(author_hdf5_file, author_ids)
+    shard = shards[0]
 
 
 # ### Build the neural network model
-
-if True:
+if False:
     model = Sequential()
     model.add(Convolution2D(96, 11, 11,
                             border_mode='valid', subsample=(4,4),
@@ -146,7 +145,7 @@ if True:
     model.add(Dense(num_authors))
     model.add(Activation('softmax'))
     
-if True:
+if False:
     print "Compiling model"
     sgd = SGD(lr=lr, decay=1e-6, momentum=0.9, nesterov=True)
     model.compile(loss='categorical_crossentropy', optimizer=sgd)

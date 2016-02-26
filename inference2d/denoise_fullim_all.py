@@ -69,9 +69,6 @@ def create_output_im( output_buffer, im, input_shape=(None,1,56,56), topbot_over
             
     return output_im
 
-
-# In[ ]:
-
 if shingle_dim[0]==56:
     print "Loading original weights into GPU memory"
     model=conv4p56_model(shingle_dim=(56,56))
