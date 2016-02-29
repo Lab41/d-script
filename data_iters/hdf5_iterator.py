@@ -262,8 +262,8 @@ class Hdf5MiniBatcher:
 # alternative dataset iterator class, simpler init
 class Hdf5GetterBatcher(Hdf5MiniBatcher):
     def __init__(self, fname,
-                 num_authors,
-                 num_forms_per_author,
+                 num_authors=None,
+                 num_forms_per_author=None,
                  item_getter=None,
                  default_mode=MiniBatcher.TRAIN,
                  batch_size=32,
@@ -272,8 +272,8 @@ class Hdf5GetterBatcher(Hdf5MiniBatcher):
         """
         Arguments
         fname -- path to HDF5 set
-        num_authors -- number of authors to retrieve from HDF5 set
-        num_forms_per_author -- number of fragments to retrieve per author (-1 will get them all)
+        num_authors -- number of authors to retrieve from HDF5 set (None to get them all)
+        num_forms_per_author -- number of fragments to retrieve per author (-1 or None will get them all)
         item_getter -- function for getting stuff from the hdf5 file
         default_mode -- which set (TRAIN, TEST, VAL) should MiniBatcher return by default?
         shingle_dim=(120,120) -- shingle size (rows, cols)
@@ -293,6 +293,8 @@ class Hdf5GetterBatcher(Hdf5MiniBatcher):
             if len(fIn[author]) >= num_forms_per_author:
                 authors.append(author)
 
+        if num_authors is None:
+            num_authors = len(authors)
         if len(authors) < num_authors:
             raise ValueError("There are only %d authors with more than %d forms" % (len(authors), num_forms_per_author))
 

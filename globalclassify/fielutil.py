@@ -259,10 +259,11 @@ def patnet_layers(num_outputs, input_shape):
     model.add(Flatten())
 
     model.add(Dense(150, activation='relu'))
-    model.add(Dropout(0.25))
 
-    model.add(Dense(num_outputs))
-    model.add(Activation('softmax'))
+    if num_outputs:
+        model.add(Dropout(0.25))
+        model.add(Dense(num_outputs))
+        model.add(Activation('softmax'))
     
     return model
 
