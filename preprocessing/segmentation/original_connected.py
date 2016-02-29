@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from collections import namedtuple
+from itertools import izip
 import logging
 import time
 import h5py
@@ -21,16 +22,17 @@ from denoiser.noisenet import conv4p_model
 
 
 # getter function for Hdf5 iterators
-# this getter uses an evil global/local thing to cache components
-components={}
 def connected_component_getter(f, key, shingle_dim,
                         rng=None,
                         fill_value=255,
+                        cutoff_value=128,
                         preprocess_doc=None,
                         postprocess=None,
                         add_rotation=False,
-                        stdev_threshold=None):
-    global components
+                        stdev_threshold=None,
+                        hdf5_output_path=None):
+    if hdf5_output_path is None:
+        hdf5_output_path = "/work/cc_features.hdf5"
     author,fragment = key
     key_flat = "{}_{}".format(*key)
     query_img = f[author][fragment][()]
@@ -38,50 +40,68 @@ def connected_component_getter(f, key, shingle_dim,
     assert stdev_threshold is None
     assert add_rotation==False
     
-    # extract components from document if necessary
-    if f.filename not in components:
-        components[f.filename] = {}
-    corpus_components_hash = components[f.filename]
-    if key_flat not in corpus_components_hash:
-        # Preprocess document and shingle (does not offer rng as an argument)
-        if preprocess_doc is not None:
-            query_img=preprocess_doc(query_img)
-        corpus_components_hash[key_flat] = cc_shingler(query_img)
-    document_components, component_info = corpus_components_hash[key_flat]
-    
-    # loop until success
-    for j in range(10000):
-        # pick a random component
-        cc_element=rng.choice(document_components)
-
-        # fiddle
-        cc_element=pad_shingle_top(cc_element, 0.75, pad_value=255)
-
-        for i in range(10000):
-            x_lim = max(1, shingle_dim[1] - cc_element.shape[1])
-            y_lim = max(1, shingle_dim[0] - cc_element.shape[0])
-            new_location=(rng.randint(x_lim), rng.randint(y_lim)) 
+    with h5py.File(hdf5_output_path, "a") as components:
+        # extract components from document if necessary
+        if f.filename not in components:
+            components.create_group(f.filename)
+        corpus_components_hash = components[f.filename]
+        # check for this document in corpus or that the corpus was improperly written
+        if key_flat not in corpus_components_hash or \
+                any([len(cc.attrs)==0 for cc in corpus_components_hash[key_flat].itervalues()]):
+            # Preprocess document and shingle (does not offer rng as an argument)
+            if preprocess_doc is not None:
+                query_img=preprocess_doc(query_img)
+            # erase any previous extraction work for this document
             try:
-                cc_element=put_in_shingle(cc_element, shingle_dim, pad_value=fill_value,
-                                 paste_location=new_location)
-            except ValueError as e:
-                if str(e)=="Blank shingle":
-                    logger = logging.getLogger(__name__)
-                    logging.debug("Blank shingle")
-                    continue
-                else:
-                    raise
-            break
-        if cc_element.shape!=shingle_dim:
-            continue
-        else:
-            break
-        
+                del corpus_components_hash[key_flat]
+            except KeyError:
+                pass
+            corpus_components_hash.create_group(key_flat)
+
+            # add component info as attributes
+            ccomponents, ccinfos = cc_shingler(query_img, fill_value=fill_value, cutoff=cutoff)
+            for component_index, (component, info) in enumerate(izip(ccomponents,ccinfos)):
+                component_index=str(component_index)
+                corpus_components_hash[key_flat].create_dataset(component_index, data=component)  
+                for attr_name, attr_val in info._asdict().iteritems():
+                    corpus_components_hash[key_flat][component_index].attrs[attr_name] = attr_val
+        document_components=corpus_components_hash[key_flat]
+        component_keys=document_components.keys()
+        # loop until success
+        for j in range(10000):
+            # pick a random component
+            cc_key=rng.choice(component_keys)
+            cc_element=document_components[cc_key]
+
+            # fiddle
+            cc_element=pad_shingle_top(cc_element, 0.75, pad_value=255)
+            
+            # try to put it in a shingle (can fail)
+            for i in range(10000):
+                x_lim = max(1, shingle_dim[1] - cc_element.shape[1])
+                y_lim = max(1, shingle_dim[0] - cc_element.shape[0])
+                new_location=(rng.randint(x_lim), rng.randint(y_lim)) 
+                try:
+                    cc_element=put_in_shingle(cc_element, shingle_dim, pad_value=fill_value,
+                                     paste_location=new_location)
+                except ValueError as e:
+                    if str(e)=="Blank shingle":
+                        logger = logging.getLogger(__name__)
+                        logging.debug("Blank shingle")
+                        continue
+                    else:
+                        raise
+                break
+            #check that the component was successfully put in a shingle
+            if cc_element.shape!=shingle_dim:
+                continue
+            else:
+                break
+            
     if postprocess is not None:
         cc_element=postprocess(cc_element, rng=rng)
     
     return cc_element
-
 
 
 ShingleInfo=namedtuple('ShingleInfo', ['area',
@@ -96,7 +116,7 @@ ShingleInfo=namedtuple('ShingleInfo', ['area',
 
 
 def connectedcomponents( im, cutoff=128 ):
-    ''' Find connected components of value above cutoff
+    ''' Find connected components of value below cutoff
     in image '''
     im = im[()] < cutoff
     return ndimage.label(im > 0.5)
@@ -154,20 +174,36 @@ def get_shingle_info(shingle):
                        center_x=center_x,
                        center_y=center_y)
 
-def cc_shingler(img):
+def cc_shingler(img, mask=True, fill_value=255, cutoff=128):
     ''' Extract connected components from a shingle
+    
+    Arguments:
+    img -- ndarray-like, extract connected components from this
+    mask -- if false, returned connected components are clipped from img using
+        bounding boxes and may contain pixels that are not part of the component; if true,
+        returned connected components contain only pixels that form part of the component
+    fill_value -- if mask is True, out-of-component positions will be filled with this
+    cutoff -- values lower than this will be considered candidates for connection
     
     Returns a 2-tuple with:
         - a list of numpy arrays holding connected components extracted from
         img
         - a list with summary statistics about each shingle'''
-    connected_component_indices, num_components = connectedcomponents(img)
+    connected_component_indices, num_components = connectedcomponents(img, cutoff=cutoff)
     connected_components = []
     component_info = []
     for cc_index in range(num_components):
         cc_slice = boundingboxcc(connected_component_indices, cc_index, as_slices=True)
         cc_shingle = img[cc_slice]
-        # normalize
+        # mask if needed
+        if mask:
+            cc_mask = connected_component_indices[cc_slice]==cc_index
+            cc_inv_mask = (-cc_mask).astype(cc_shingle.dtype)
+            cc_mask = cc_mask.astype(cc_shingle.dtype)
+            # combine masked and transformed blank space with passed-through component
+            cc_shingle = cc_inv_mask * fill_value + \
+                         cc_mask * cc_shingle
+        # get info
         shingle_stats = get_shingle_info(cc_shingle)
         # prune
         if shingle_stats.area > 250 and \
@@ -181,7 +217,6 @@ def cc_shingler(img):
 def pad_shingle_top(shingle, midline_target=0.75, pad_value=0.):
     ''' Zero-pad the top of shingle so that the row-wise center of gravity is 
     at or below a predetermined proportion of the number of rows.'''
-    
     shingle_info=get_shingle_info(shingle)
     rows_to_add=int(midline_target * shingle.shape[0] - shingle_info.center_y)
     if rows_to_add > 0:
@@ -199,18 +234,18 @@ def put_in_shingle(img, shingle_size, pad_value=0., paste_location=None):
     # assume that paste_location is the upper lefthand corner
     # haven't done the math otherwise
     #assert paste_location == (0,0)
-    
+        
     paste_x, paste_y = paste_location
     img_height, img_width = img.shape
     shingle_height, shingle_width = shingle_size
     img_left, img_right = \
-        sorted((0 if paste_x >= 0 else paste_x + img_width,
-               img_width if paste_x + img_width < shingle_width
-                   else shingle_width - paste_x))
+        sorted((0 if paste_x >= 0 else -paste_x,
+               img_width if paste_x + img_width <= shingle_width
+                   else (shingle_width - paste_x) % img_width))
     img_top, img_bottom = \
-        sorted((0 if paste_y >= 0 else paste_y + img_height,
-               img_height if paste_y + img_height < shingle_height
-                   else shingle_height - paste_y))
+        sorted((0 if paste_y >= 0 else -paste_y,
+               img_height if paste_y + img_height <= shingle_height
+                   else (shingle_height - paste_y) % img_height))
         
     shingle_left, shingle_right = \
         sorted((paste_x if paste_x > 0 else 0,
@@ -223,7 +258,7 @@ def put_in_shingle(img, shingle_size, pad_value=0., paste_location=None):
    
     img_slice=(slice(img_top,img_bottom), slice(img_left,img_right))
     shingle_slice=(slice(shingle_top,shingle_bottom), slice(shingle_left,shingle_right))
-   
+
     if not (img[img_slice] != pad_value).any():
         # aint got nothing in it
         raise ValueError("Blank shingle")
