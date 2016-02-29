@@ -16,7 +16,7 @@ print sys.path
 
 # d-script imports
 from globalclassify.fielutil import load_verbatimnet
-from denoiser.noisenet import conv4p_model
+from denoiser.noisenet import conv4p56_model as conv4p_model
 
 #from globalclassify.featextractor import load_verbatimnet, load_denoisenet
 

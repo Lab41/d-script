@@ -13,8 +13,6 @@ import preprocessing.segmentation.original_connected as original_connected
 from preprocessing.segmentation.original_connected import cc_shingler, pad_shingle_top, put_in_shingle, get_shingle_info
 
 ### Parameters
-# Do you want to load the features in? Or save them to a file?
-load_features = False
 
 # All the images that you require extraction should be in this HDF5 file
 # hdf5images='icdar13data/benchmarking-processed/icdar_be.hdf5'
@@ -25,13 +23,17 @@ hdf5images='/fileserver/nmec-handwriting/flat_nmec_cropped_bin_uint8.hdf5'
 hdf5base=os.path.basename(hdf5images)
 
 # This is the file that you will load the features from or save the features to
-featurefile = '/fileserver/nmec-handwriting/globalfeatures/nmec_bw_crop.deNNam_fiel657.steps5_mean250.hdf5'
+#featurefile = '/fileserver/nmec-handwriting/globalfeatures/nmec_bw_crop.deNNam_fiel657.steps5_mean250.hdf5'
 outdir='/fileserver/nmec-handwriting/localfeatures/nmec_bw_crop.deNNiam_fiel657.steps5_mean250/'
 components_outpath='/work/d-script/nmec_ccs.hdf5'
 features_outpath='/fileserver/nmec-handwriting/localfeatures/nmec_clean56_overlap10_patnet.npy'
+featurefile=features_outpath
 
 # This points to the neural networks and saved weights
 paramsfile = '/work/d-script/weights/patnet-iam-480.hdf5'
+
+# Do you want to load the features in? Or save them to a file?
+load_features = os.path.isfile(featurefile)
 
 
 ### Full image HDF5 file
@@ -40,12 +42,11 @@ paramsfile = '/work/d-script/weights/patnet-iam-480.hdf5'
 
 
 # ### Load feature extractor neural network
-print "Making patnet"
+
 if not load_features:
+    print "Making patnet"
     patnet = patnet_layers(None, (1, 56, 56))
     patnet.compile(loss='mse', optimizer='sgd')
-
-    
 
 ### Already extracted features for each document?
 # If saved, then use saved feature vectors, otherwise, run extractor
@@ -157,5 +158,5 @@ for j, similarity_vector in enumerate(F):
     
 # Print out results    
 print "Top %d (soft criteria) = %f" %( k, (softcorrect+0.0) / totalnum )
-print "Top %d (hard criteria) = %f" %( k, (hardcorrect+0.0) / totalnum / maxtop )
+print "Top %d (hard criteria) = %f" %( maxtop, (hardcorrect+0.0) / float(totalnum) / float(maxtop) )
 
