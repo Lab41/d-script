@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import time
 from functools import partial
 import numpy as np
 import h5py
@@ -129,13 +130,20 @@ batch_object = Hdf5GetterBatcher(hdf5authors,
 
 print "Starting training"
 # logging.getLogger('data_iters.hdf5_iterator').setLevel(logging.DEBUG)
+(X_val, Y_val) = batch_object.get_val_batch(1000)
+X_val=X_val.reshape((-1, 1) + shingle_dim)
+Y_val=to_categorical(Y_val,num_authors)
 for batch_iter in range(iterations):
+    t1 = time.time()
     (X_train,Y_train) = batch_object.get_train_batch()
-    X_train = X_train.reshape((batch_size, 1) + shingle_dim)
+    t2 = time.time()
+    print "Retrieved batch {} in {} seconds".format(batch_iter, t2-t1)
+    X_train = X_train.reshape((-1, 1) + shingle_dim)
     Y_train = to_categorical(Y_train, num_authors)
-    patnet.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=1, show_accuracy=True, verbose=1)
+    patnet.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=1, validation_data=(X_val, Y_val), show_accuracy=True, verbose=1)
     print "Finished training on the "+str(batch_iter)+"th batch"
     if (batch_iter % 20)==0 and batch_iter != 0:
+        pass
         patnet.save_weights('/work/d-script/weights/patnet-iam.hdf5', overwrite=True)
 
 
