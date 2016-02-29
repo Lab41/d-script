@@ -297,6 +297,52 @@ def load_minifielnet(layer='fclast', paramsfile='/fileserver/iam/iam-processed/m
     return vnet
 
 
+def fiel120(layer='fclast'):
+    model = Sequential()
+    model.add(Convolution2D(96, 11, 11,
+                            border_mode='valid', subsample=(4,4),
+                            input_shape=(1, 120, 120),
+                            activation='relu'))
+    
+    model.add(MaxPooling2D(pool_size=(2,2)))
+
+    model.add(Convolution2D(96, 5, 5, activation='relu', border_mode='same'))
+    model.add(Dropout(0.25))
+    model.add(MaxPooling2D(pool_size=(2,2)))
+
+    model.add(Convolution2D(256, 3, 3, border_mode = 'same', activation='relu'))
+
+    model.add(Convolution2D(256, 3, 3, border_mode = 'same', activation='relu'))
+    model.add(Dropout(0.25))
+    
+    model.add(Convolution2D(256, 3, 3, border_mode = 'same', activation='relu'))
+ 
+    model.add(MaxPooling2D(pool_size=(3, 3)))
+    
+    model.add(Flatten())
+    model.add(Dense(4096, activation='relu'))
+    model.add(Dropout(0.25))
+    
+    model.add(Dense(4096, activation='relu'))
+    if layer=='fclast':
+        return model
+    
+    model.add(Dropout(0.25))
+    # To try if doesn't converge
+    #model.add(Dense(4096, activation='relu'))
+    #model.add(Dropout(0.25))
+    model.add(Dense(num_authors))
+    model.add(Activation('softmax'))
+    return model
+
+def load_fiel120(layer='fclast', paramsfile='/fileserver/iam/iam-processed/models/fielnet120-7L-acc80err.83.hdf5'):
+    print "Establishing 120 input: 4096 layer out"
+    vnet = fiel120(layer)
+    vnet.compile(loss='mse', optimizer='sgd')
+    loadparams( vnet, paramsfile )
+    print "Loaded neural network up to "+layer+" layer"
+    return vnet
+
 def extract_imfeats( hdf5name, network ):
 
     # Image files
@@ -322,6 +368,10 @@ def extract_imfeats( hdf5name, network ):
         imfeatures = np.concatenate( (imfeatures, np.expand_dims(features.mean(axis=0),0)) )
         
     return imfeatures
+
+
+
+################################# DENOISING #################################
 
 def denoise_basic_model( shingle_dim=(70,70) ):
 
@@ -365,7 +415,7 @@ def denoise_conv2_model( shingle_dim=(56,56) ):
 
     return model
 
-def denoise_conv4p_model( shingle_dim=(120,120) ):
+def denoise_conv4p120_model( shingle_dim=(120,120) ):
 
     model = Sequential()
     model.add(Convolution2D(128, 6, 6,
