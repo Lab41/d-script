@@ -7,7 +7,7 @@ sys.path.append('..')
 # d-script imports
 from class_icdar_iterator import *
 from data_iters.minibatcher import MiniBatcher
-from fielutil import verbatimnet, loadparams, basic_model, conv2_model
+from fielutil import verbatimnet, loadparams, denoise_conv2_model
 
 # Required neural network libraries
 import keras
@@ -36,7 +36,7 @@ def load_verbatimnet( layer, input_shape=(1,56,56), params='/fileserver/iam/iam-
     return vnet
 
 def load_denoisenet(shingle_dim=(56,56)):
-    model=conv2_model()
+    model=denoise_conv2_model()
     model.load_weights('conv2_linet_icdar-ex.hdf5')
     return model
 
@@ -97,6 +97,7 @@ def extract_imfeats( hdf5name, network, outdir=None, denoiser=None, shingle_dims
             np.save( outdir+imname+'.npy' , features )
 
     return imfeatures
+  
 
 ## File formatting --------------------------
 # From author format to flat format
